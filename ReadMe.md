@@ -12,7 +12,7 @@ Functional Data present here in csv files.
 
 # Tools Used 
 Phase 1 describes bioinformatics. Phase 2 describes statistical analysis for Amplicon Data. Phase 3 describes statisitical analysis of functional Data. 
-------------------
+
 Phase 1 - Flash for merging R1, R2 fastq - [Link](https://ccb.jhu.edu/software/FLASH/) <br/>
 Phase 1 - Fastx toolkit for quality filtering - [Link](http://hannonlab.cshl.edu/fastx_toolkit/) <br/>
 Phase 1 - Usearch for OTU construction - [Link](https://www.drive5.com/usearch/) <br/>
