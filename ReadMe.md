@@ -3,7 +3,7 @@ Supplemental seqeunce processing and R statistical analysis for publication whic
 Project contains amplicon data for various genes: 16S rRNA, ITS, bacterial amoA, Archeal amoA, nirS, nirK, nosZ. In addtion to functional potential assay data, and N2O flux. 
 
 # Sample Data 
-Raw sample data is present at BioProject: [XXXXXXX]
+Raw sample data is present at BioProject: [PRJNA789877](https://dataview.ncbi.nlm.nih.gov/object/PRJNA789877)<br/>
 Functional Data present here in csv files. 
 
 # Collaborators 
