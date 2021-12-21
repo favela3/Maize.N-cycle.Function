@@ -11,7 +11,7 @@ Functional Data present here in csv files.
 2. [Martin Bohn](https://cropsciences.illinois.edu/people/profile/mbohn)
 
 # Tools Used 
-Phase 1 describes bioinformatics. Phase 2 describes statistical analysis for Amplicon Data. Phase 3 describes statisitical analysis of functional Data. 
+Phase 1 describes bioinformatics. Phase 2 describes statistical analysis for Amplicon Data, N-cycling functional Data, and Weighted Gene Correlation Network Analysis. 
 
 Phase 1 - Flash for merging R1, R2 fastq - [Link](https://ccb.jhu.edu/software/FLASH/) <br/>
 Phase 1 - Fastx toolkit for quality filtering - [Link](http://hannonlab.cshl.edu/fastx_toolkit/) <br/>
@@ -25,8 +25,8 @@ Phase 2 - Vegan for multivariate stats - [Link](https://rdrr.io/rforge/vegan/) <
 Phase 2 - DESEQ2 for Differential Abundance - [Link](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) <br/>
 Phase 2 - ASREML-R for Univariate stats - [Link](https://www.vsni.co.uk/software/asreml-r) <br/>
 Phase 2 - Tidyverse for Data Formatting - [Link](https://www.tidyverse.org/)
-
-Phase 3 - Analysis in R and R Studio - [Link](https://www.rstudio.com/) <br/>
-Phase 3 - ggplot2 for figure plotting - [Link](https://ggplot2.tidyverse.org/) <br/>
-Phase 3 - ASREML-R for Univariate stats - [Link](https://www.vsni.co.uk/software/asreml-r) <br/>
-Phase 3 - Tidyverse for Data Formatting - [Link](https://www.tidyverse.org/)<br/>
+Phase 2 - Analysis in R and R Studio - [Link](https://www.rstudio.com/) <br/>
+Phase 2 - ggplot2 for figure plotting - [Link](https://ggplot2.tidyverse.org/) <br/>
+Phase 2 - ASREML-R for Univariate stats - [Link](https://www.vsni.co.uk/software/asreml-r) <br/>
+Phase 2 - Tidyverse for Data Formatting - [Link](https://www.tidyverse.org/)<br/>
+Phase 2 - WGCNA - [Link](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559) <br/>
