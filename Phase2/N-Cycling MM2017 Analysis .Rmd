@@ -1,0 +1,1373 @@
+---
+title: "Nitrification and Denitrfication Analysis MM2017"
+output: html_notebook
+author: Alonso Favela 
+Date: "6/1/2020"
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+setwd("~/Documents/Projects/Projects/Maize Microbiome/MM2017/Data/RDATA")
+setwd("~/Documents/Projects/Research/Maize Microbiome/MM2017/Data/RDATA")
+
+```{r setup, include=FALSE}
+
+#Set working directoy#
+setwd("~/Documents/Projects/Projects/Maize Microbiome/MM2017/Data/RDATA")
+
+###Loading Important Packages###
+library(ggplot2)
+library(vegan)
+library(tidyverse)
+library(jtools)
+
+
+###Loading Important Data###
+#Function.2017=read.csv(file="MM2017_Function.csv",head=T)
+Function.2017=read.csv(file="MM2017_Function_Modifed.6.20.20.csv",head=T)
+
+#Nit.2017 = read.csv(file ="MasterNitfication.csv", head = T)
+# DEA.2017=read.csv(file="DEA.Data.All.nooutlier.csv",head=T)
+
+#This has all for the needed field, time and genotype data
+MetaData=read.csv(file="2017MappingFile.csv",head=T)
+
+Nit.2017=read.csv(file="All.Time.Trials.Nitrfication.Master.csv",head=T)
+Nit.2017=read.csv(file="/Volumes/AlonsoF - HD - Kent Lab/Maize Microbiome 2017/Data/Nitrification/COMBINED SHEET/All.Time.Trials.Nitrfication.Master.Updated.4.9.20.csv",head=T)
+
+
+```
+
+
+```{r, merging and data cleaning}
+
+#Here I need to merge the additional meta-data with the functional data. 
+test<-left_join(MetaData,Nit.2017, by=c("SampleID"="Sample.ID"))
+Nit.Data<-test%>%filter(!is.na(Nitrification.Rate..ngN.dm.gh.))
+#The data is ideal for analysis| It includes all of the samples that have nitrfication rates in the Ni.2017 file
+#I also combined the range and row to make a blocck factor
+Nit.Data<-Nit.Data%>%unite(Block,Range,Row, remove=FALSE)
+
+
+# test<-left_join(MetaData,Function.2017, by=c("SampleID"="Samples"))
+# Function.2017<-test%>%filter(!is.na(LogNit))
+
+Function.Data<-Function.2017%>%unite(Block,Range,Row, remove=FALSE)
+
+#Function.2017
+#The rest of this chunck is reserved to do this with the DEA, and live N20 samples
+
+```
+
+Orginal code. no teosinte
+```{r, Nitrification Analysis }
+#Hybrid vs Inbred Nitrficiation Across different time points
+#Seems like there is some hybrid vigor in this supression trait. 
+Nit.Data%>%ggplot( aes(x=Type, y=Nitrification.Rate..ngN.dm.gh.))+geom_boxplot(aes(fill=Type))
+
+Nit.Data%>%ggplot( aes(x=Genotype, y=as.numeric(Nitrification.Rate..ngN.dm.gh./1000)))+geom_boxplot(aes(fill=Type))
+
+Nit.Data%>%ggplot( aes(x=Time, y=Nitrification.Rate..ngN.dm.gh.))+geom_boxplot()
+#All Types across different timepoints
+Nit.Data%>%ggplot( aes(x=Time, y=Nitrification.Rate..ngN.dm.gh.))+geom_boxplot(aes(fill=Type))
+
+NitData2%>%ggplot( aes(x=Time, y=Nitrification.Rate..ngN.dm.gh.))+geom_boxplot(aes(fill=Type))
+
+
+#All Genotypes across different timepoints
+Nit.Data%>%ggplot( aes(x=Time, y=Nitrification.Rate..ngN.dm.gh.))+geom_boxplot(aes(fill=Genotype))
+
+Nit.Data%>%ggplot( aes(x=Time, y=N.rate..mgN.dm.gh.))+geom_boxplot(aes(fill=Genotype))
+
+
+NitData2<-Nit.Data[-c(115,196,289,288),]
+
+NitData2%>%ggplot( aes(x=Time, y=Nitrification.Rate..ngN.dm.gh.))+geom_boxplot(aes(fill=Genotype))
+
+NitData2%>%ggplot( aes(x=Time, y=log(Nitrification.Rate..ngN.dm.gh.)))+geom_boxplot(aes(fill=Genotype))
+
+##This removes outliers in both directions and makes the data seem more signficant
+NitData2 %>%  filter(Nitrification.Rate..ngN.dm.gh.>=400)%>%ggplot( aes(x=Time, y=log(Nitrification.Rate..ngN.dm.gh.)))+geom_boxplot(aes(fill=Genotype))
+
+
+NitData2 %>%  filter(Nitrification.Rate..ngN.dm.gh.>=400)%>%ggplot( aes(x=Time, y=(Nitrification.Rate..ngN.dm.gh./1000)))+geom_boxplot(aes(fill=Genotype))
+
+Nit.Data%>%ggplot( aes(x=Time, y=Nitrification.Rate..ngN.dm.gh.))+geom_boxplot(aes(fill=Genotype))+facet_grid(.~Type)
+
+#This is a good figure for looking at genotypic means 
+Nit.Data%>%ggplot( aes(x=reorder(Genotype,Nitrification.Rate..ngN.dm.gh.), y=Nitrification.Rate..ngN.dm.gh.))+
+  geom_boxplot(aes(fill=Genotype))+
+  theme(axis.text.x = element_text(angle = 90))
+
+Nit.Data%>%ggplot( aes(x=reorder(Genotype,Nitrification.Rate..ngN.dm.gh.), y=log(Nitrification.Rate..ngN.dm.gh./1000)))+
+  geom_boxplot(aes(fill=Genotype))+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+Nit.Data%>%ggplot( aes(x=reorder(Genotype,X.N.C.), y=as.numeric(X.N.C.)))+
+  geom_boxplot(aes(fill=Genotype))+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+Nit.Data%>%
+  filter(Time=="1")%>%
+  ggplot( aes(x=reorder(Genotype,Nitrification.Rate..ngN.dm.gh.), y=Nitrification.Rate..ngN.dm.gh.))+
+  geom_boxplot(aes(fill=Genotype))+
+  theme(axis.text.x = element_text(angle = 90))
+
+Nit.Data%>%
+  filter(Time=="2")%>%
+  ggplot( aes(x=reorder(Genotype,Nitrification.Rate..ngN.dm.gh.), y=Nitrification.Rate..ngN.dm.gh.))+
+  geom_boxplot(aes(fill=Genotype))+
+  theme(axis.text.x = element_text(angle = 90))
+
+Nit.Data%>%
+  filter(Time=="3")%>%
+  ggplot( aes(x=reorder(Genotype,Nitrification.Rate..ngN.dm.gh.), y=Nitrification.Rate..ngN.dm.gh.))+
+  geom_boxplot(aes(fill=Genotype))+
+  theme(axis.text.x = element_text(angle = 90))
+
+#How do the different replicates preform across time. 
+Nit.Data%>%ggplot( aes(x=Rep, y=Nitrification.Rate))+geom_boxplot(aes(fill=as.character(Rep)))
+
+Nit.Data%>%ggplot( aes(x=reorder(GGDGrowth,TIMEPOINT), y=Nitrification.Rate))+geom_boxplot(aes(fill=as.character(Rep)))
+
+
+#How does space impact the resulting funciton
+Nit.Data%>%ggplot( aes(x=reorder(GGDGrowth,TIMEPOINT), y=Nitrification.Rate))+geom_boxplot(aes(fill=as.character(Row)))
+Nit.Data%>%ggplot( aes(x=reorder(GGDGrowth,TIMEPOINT), y=Nitrification.Rate))+geom_boxplot(aes(fill=as.character(Range)))
+
+Nit.Data%>%ggplot( aes(x=Range, y=Nitrification.Rate))+geom_boxplot(aes(fill=as.character(Range)))
+Nit.Data%>%ggplot( aes(x=Row, y=Nitrification.Rate))+geom_boxplot(aes(fill=as.character(Row)))
+#It kind of looked like nows had some effect across the range
+
+#Its clear that some replicates are consistanrly lower ans higher. 
+#I may add an additional row to the data to look at the block effect. 
+# Nit.Data<-Nit.Data%>%unite(Block,Range,Row, remove=FALSE)
+
+#This is kinda of getting at the varaition that an indivudal block an contribute to function
+Nit.Data%>%ggplot( aes(x=Block, y=Nitrification.Rate))+
+  geom_boxplot(aes(fill=as.character(Block)))+
+  theme(axis.text.x = element_text(angle = 90))
+#Here I'd Like to look at the heterotic groups
+#Now I think it would be useful to see how the varaince breaks up across treatment using an ANOVA
+```
+
+This has the modifed data set with all of the nessary factors. These lines have teosinte.
+```{r, Nitrification Analysis }
+#Hybrid vs Inbred Nitrficiation Across different time points
+#Seems like there is some hybrid vigor in this supression trait. 
+Function.Data%>%ggplot( aes(x=Type, y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=Type))
+Function.Data%>%ggplot( aes(x=as.character(Time), y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=Type))
+Function.Data%>%ggplot( aes(x=as.character(Time), y=LogNit))+geom_boxplot(aes(fill=Type))
+
+
+#Setting theme 
+theme_set(theme_bw())
+
+#Some blocks seem to be contrbuting very little to nitrication rate
+Function.Data%>%ggplot( aes(x=as.character(Time), y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=Genotype))
+Function.Data%>%ggplot( aes(x=as.character(Time), y=LogNit))+geom_boxplot(aes(fill=Genotype))
+
+
+#All Genotypes across different timepoints
+Function.Data%>%ggplot( aes(x=Genotype, y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=Genotype))
+
+
+Function.Data%>%ggplot( aes(x=Genotype, y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=Type))+
+  theme(axis.text.x = element_text(angle = 90))
+
+Function.Data%>%ggplot( aes(x=Genotype, y=LogNit))+geom_boxplot(aes(fill=Type))+
+  theme(axis.text.x = element_text(angle = 90))
+
+#How do the different replicates preform across time. 
+Function.Data%>%ggplot( aes(x=Rep, y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=as.character(Rep)))
+
+Function.Data%>%ggplot( aes(x=as.character(Time), y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=as.character(Rep)))
+
+
+#How does space impact the resulting funciton
+Function.Data%>%ggplot( aes(x=as.character(Time), y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=as.character(Row)))
+Function.Data%>%ggplot( aes(x=as.character(Time), y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=as.character(Range)))
+
+Function.Data%>%ggplot( aes(x=Range, y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=as.character(Range)))
+Function.Data%>%ggplot( aes(x=Row, y=Nitrification...ngN.gh.))+geom_boxplot(aes(fill=as.character(Row)))
+#It kind of looked like nows had some effect across the range
+
+#Its clear that some replicates are consistanrly lower ans higher. 
+#I may add an additional row to the data to look at the block effect. 
+# Nit.Data<-Nit.Data%>%unite(Block,Range,Row, remove=FALSE)
+
+#This is kinda of getting at the varaition that an indivudal block an contribute to function
+Function.Data%>%ggplot( aes(x=Block, y=Nitrification...ngN.gh.))+
+  geom_boxplot(aes(fill=as.character(Block)))+
+  theme(axis.text.x = element_text(angle = 90))
+#Here I'd Like to look at the heterotic groups
+#Now I think it would be useful to see how the varaince breaks up across treatment using an ANOVA
+
+#Figure for Angela's NREC proposal 
+Function.Data%>%filter(Type=="Inbred")%>%
+  ggplot( aes(x=as.character(Time), y=Nitrification...ngN.gh.))+
+  geom_boxplot(aes(fill=Genotype))+xlab("Time Sampled")+ylab("potential nitrification (ngN/g/h)")+
+  scale_fill_discrete(name = "Elite Genotypes")
+  
+
+```
+
+
+```{r, Statistics}
+#Here I want to run some ANOVA to look at how the varance across the treatments break down. 
+
+#Model| Time seems to be predictive in the model, but genotype is not
+model<-aov(Nitrification.Rate~Genotype+Time+Block+Range+Row, data=Nit.Data)
+summary(model)
+
+model<-aov(Nitrification.Rate~Genotype*Time+Range+Row+Error(Block), data=Nit.Data)
+summary(model)
+
+model<-aov(Nitrification.Rate~Genotype*Time+Range+Row+Error(Block), data=Nit.Data)
+summary(model)
+
+
+#Log transfroming the Nitrifcation data gets rid of the Blocking effects
+model<-aov(LogN~Genotype*Time+Range+Row+Block, data=Nit.Data)
+summary(model)
+
+model<-aov(LogN~Genotype*Time+Range+Row+Error(Block), data=Nit.Data)
+summary(model)
+
+model<-aov(LogN~Heterotic*Time+Range+Row+Block, data=Nit.Data)
+summary(model)
+
+##Time is an overwhelming factor
+Inbred<-Nit.Data%>%filter(Type.x=="Inbred")
+Hybrid<-Nit.Data%>%filter(Type.x=="Hybrid")
+
+#pull out type| 
+model<-aov(Nitrification.Rate~Genotype*Time+Range+Row+Error(Block), data=Inbred)
+summary(model)
+
+#Hybrids are less sensative to time
+model<-aov(Nitrification.Rate~Genotype*Time+Range+Row+Error(Block), data=Hybrid)
+summary(model)
+##Pull out time 
+T1<-Nit.Data%>%filter(Time==1)
+T1<-Nit.Data%>%filter(Time==1)
+T2<-Nit.Data%>%filter(Time==2)
+T3<-Nit.Data%>%filter(Time==3)
+## While the P value
+model<-aov(Nitrification.Rate~Genotype+Range+Row+Error(Block), data=T1)
+summary(model)
+
+model<-aov(Nitrification.Rate~Genotype+Range+Row+Error(Block), data=T2)
+summary(model)
+
+model<-aov(Nitrification.Rate~Genotype+Range+Row+Error(Block), data=T3)
+summary(model)
+
+model<-aov(LogN~Genotype+Range+Row+Error(Block), data=T1)
+summary(model)
+
+#Its the closest to being different in genotypes here
+model<-aov(LogN~Genotype+Range+Row+Error(Block), data=T2)
+summary(model)
+
+model<-aov(LogN~Genotype+Range+Row+Error(Block), data=T3)
+summary(model)
+
+```
+
+
+```{r, Statistics}
+#Here I want to run some ANOVA to look at how the varance across the treatments break down. 
+
+#Model| Time seems to be predictive in the model, but genotype is not
+model<-aov(Nitrification...ngN.gh.~Genotype+Time+Range+Row+Block, data=Function.Data)
+summary(model)
+
+#Correcting the Block effect increases the genotypuc difference.  
+model<-aov(Nitrification...ngN.gh.~Genotype*Time+Range+Row+Error(Block), data=Function.Data)
+summary(model)
+#Type (Inbred, Teosinte, and Hybrids show difference)
+model<-aov(Nitrification...ngN.gh.~Type*Time+Range+Row+Error(Block), data=Function.Data)
+summary(model)
+
+#Log transfroming the Nitrifcation data gets rid of the Blocking effects| 
+#It seems like taking the log of the function makes the value stronger.
+model<-aov(LogNit~Genotype*Time+Range+Row+Block, data=Function.Data)
+summary(model)
+
+model<-aov(LogNit~Genotype*Time+Range+Row+Error(Block), data=Function.Data)
+summary(model)
+
+model<-aov(LogNit~Type*Time+Range+Row+Block, data=Function.Data)
+summary(model)
+
+##Teosinte seems to be driving alot fo the differences within the dataset. We don't see major differences within the inbred and hybrids. 
+
+##Time is an overwhelming factor
+Inbred<-Nit.Data%>%filter(Type.x=="Inbred")
+Hybrid<-Nit.Data%>%filter(Type.x=="Hybrid")
+
+#pull out type| 
+model<-aov(Nitrification.Rate~Genotype*Time+Range+Row+Error(Block), data=Inbred)
+summary(model)
+
+#Hybrids are less sensative to time
+model<-aov(Nitrification.Rate~Genotype*Time+Range+Row+Error(Block), data=Hybrid)
+summary(model)
+##Pull out time 
+T1<-Nit.Data%>%filter(Time==1)
+T2<-Nit.Data%>%filter(Time==2)
+T3<-Nit.Data%>%filter(Time==3)
+## While the P value
+model<-aov(Nitrification.Rate~Genotype+Range+Row+Error(Block), data=T1)
+summary(model)
+
+model<-aov(Nitrification.Rate~Genotype+Range+Row+Error(Block), data=T2)
+summary(model)
+
+model<-aov(Nitrification.Rate~Genotype+Range+Row+Error(Block), data=T3)
+summary(model)
+
+model<-aov(LogN~Genotype+Range+Row+Error(Block), data=T1)
+summary(model)
+
+#Its the closest to being different in genotypes here
+model<-aov(LogN~Genotype+Range+Row+Error(Block), data=T2)
+summary(model)
+
+model<-aov(LogN~Genotype+Range+Row+Error(Block), data=T3)
+summary(model)
+
+```
+
+
+```{r, calculating the gentypic effect}
+GenotypicEffectInbred<-Nit.Data%>%
+  group_by(Genotype,Type.x)%>%
+  summarise(mean.Nit=mean(Nitrification.Rate),
+            var.Nit=var(Nitrification.Rate),
+            mean.LogN = mean(LogN),
+            var.LogN=var(LogN),
+            Genotypic.effect.N=mean(Nitrification.Rate)-mean(Nit.Data$Nitrification.Rate),
+            Genotypic.eff.LN=mean(LogN)-mean(Nit.Data$LogN),
+            PercentChange=(mean(Nitrification.Rate)-mean(Nit.Data$Nitrification.Rate))/mean(Nit.Data$Nitrification.Rate)
+            )%>%ungroup()
+      
+
+##With Cleaned up data
+GenotypicEffectAll<-Nit.Data%>%
+  group_by(Genotype,Type)%>%
+  summarise(mean.Nit=mean(Nitrification.Rate..ngN.dm.gh.),
+            var.Nit=var(Nitrification.Rate..ngN.dm.gh.),
+            Genotypic.effect.N=mean(Nitrification.Rate..ngN.dm.gh.)-mean(Nit.Data$Nitrification.Rate..ngN.dm.gh.),
+            PercentChange=(mean(Nitrification.Rate..ngN.dm.gh.)-mean(Nit.Data$Nitrification.Rate..ngN.dm.gh.))/mean(Nit.Data$Nitrification.Rate..ngN.dm.gh.)
+            )%>%ungroup()
+      
+#Remove NA
+Function.2017<-Function.2017%>%filter(!is.na(LogNit))
+
+GenotypicEffectAll<-Function.2017%>%group_by(Genotype,Type)%>%
+  summarise(mean.Nit=mean(Nitrification...ngN.gh.),
+            var.Nit=var(Nitrification...ngN.gh.),
+            mean.LogN = mean(LogNit),
+            var.LogN=var(LogNit),
+            Genotypic.effect.N=mean(Nitrification...ngN.gh.)-mean(Function.2017$Nitrification...ngN.gh.),
+            Genotypic.eff.LN=mean(LogNit)-mean(Function.2017$LogNit),
+            PercentChange=(mean(Nitrification...ngN.gh.)-mean(Function.2017$Nitrification...ngN.gh.))/mean(Function.2017$Nitrification...ngN.gh.),
+            PercentChangelog=(mean(LogNit)-mean(Function.2017$LogNit))/mean(Function.2017$LogNit) )%>%ungroup()
+     
+##I like this framework alot. And it increases the differnces within a population. 
+GenotypicEffectAll%>%ggplot( aes(x=Type, y=PercentChange))+geom_boxplot(aes(fill=Type))
+
+GenotypicEffectAll%>%ggplot( aes(x=Type, y=Genotypic.effect.N))+geom_boxplot(aes(fill=Type))
+
+GenotypicEffectAll%>%ggplot( aes(x=Type, y=log(Genotypic.effect.N)))+geom_boxplot(aes(fill=Type))
+
+
+GenotypicEffectInbred%>%ggplot( aes(x=Type.x, y=PercentChange))+geom_boxplot(aes(fill=Type.x))
+GenotypicEffectInbred%>%ggplot( aes(x=Type.x, y=Genotypic.eff.LN))+geom_boxplot(aes(fill=Type.x))
+
+#I think that putting the genotyis in the framework of the population makes alot of sense. 
+
+
+#Hybrids do seems to outperfrom 
+
+#Calculating Heterosis
+
+#GenotypicEffectAll$mean.Nit[4,]
+
+#Need to write a function for heterosis:
+
+Heterosis<-function(Hybrid, Parent1, Parent2){
+  MidParent<-((Parent1+Parent2)/2)
+  Heterosis<-((Hybrid-(MidParent))/(MidParent))*100
+  return(Heterosis)
+}
+#Needs to modify this to have the actual data frame in the code. 
+  
+#Here we are calulating the heterosis in B73/PHJ40
+Heterosis(GenotypicEffectAll$mean.Nit[5],GenotypicEffectAll$mean.Nit[4],GenotypicEffectAll$mean.Nit[23])
+
+GenotypicEffectAll%>%filter(Genotype=="B73")%>%pull(3)
+
+Heterosis(filter(GenotypicEffectAll,Genotype=="B73/PHJ40")%>%pull(3)
+,GenotypicEffectAll%>%filter(Genotype=="B73")%>%pull(3)
+,GenotypicEffectAll%>%filter(Genotype=="PHJ40")%>%pull(3)
+)
+
+
+Heterosis<-function(DF, H, P1, P2, traitcol){
+  Parent1num<-filter(DF,Genotype==P1)%>%pull(traitcol)
+  Parent2num<-filter(DF,Genotype==P2)%>%pull(traitcol)
+  Hybridnum <-filter(DF,Genotype==H)%>%pull(traitcol)
+
+  MidParent<-((Parent1num+Parent2num)/2)
+  Heterosis<-((Hybridnum-(MidParent))/(MidParent))*100
+  return(Heterosis)
+}
+
+#B73 Hybrids
+Heterosis(GenotypicEffectAll, "B73/PHJ40", "B73", "PHJ40",3)
+# -8.50
+Heterosis(GenotypicEffectAll, "B73/PHZ51", "B73", "PHZ51",3)
+# -15.32
+
+#LH hybrids
+Heterosis(GenotypicEffectAll, "LH82/PH207", "LH82", "PH207",3)
+# 15.91 || This is the only genotype that is showing postive heterosis 
+Heterosis(GenotypicEffectAll, "LH82/PHJ40", "LH82", "PHJ40",3)
+# -8.76
+
+#PHG
+Heterosis(GenotypicEffectAll, "PHG39/PHZ51", "PHG39", "PHZ51",3)
+# -7.30
+
+#PHG hybrid
+Heterosis(GenotypicEffectAll, "PHG47/PHG84", "PHG47", "PHG84",3)
+# -29.22 || Showing the greatest degree of Heterosis
+Heterosis(GenotypicEffectAll, "PHG47/PHJ40", "PHG47", "PHJ40",3)
+# -11.40
+
+#Kinda interseting that the increments are in 7ths 15ths etc. 
+#Most combinations of the genotypes showed some degree of negative heterosis 
+#Most of these traits show high degrees of hybrid vigor. 
+
+##This is just tester code so I know whats going on
+(GenotypicEffectAll%>%filter(Genotype=="B73/PHJ40")%>%pull(3))
+(GenotypicEffectAll%>%filter(Genotype=="B73/PHZ51")%>%pull(3))
+
+
+##Here I'm going to attempt to make mixed liner models using R
+library(lme4)
+library(merTools)
+
+#Create model to fit the data
+InterceptModel <- lmer(formula = LogNit ~ 1 + (1|Block),
+                           data    = Function.Data) #to run the model
+summary(InterceptModel) 
+
+ICC("LogNit","Block",Function.Data)
+#Very low ICC: 0.05597184 That means that block while signifcant they are not tightly correlated
+Model <- lmer(formula = LogNit ~ 1 + Genotype+Time+(1+Time|Block), 
+              data = Function.Data,REML = TRUE) #to run the model
+
+summary(Model) 
+#jtools:summ(Model)
+anova(InterceptModel,Model)
+vcov(Model)
+Model2 <- lmer(formula = LogNit ~ 1+ Genotype+Time+(1|Block), 
+              data = Function.Data,REML = TRUE) #to run the model
+
+summary(Model2) 
+anova(Model,Model2)
+
+
+plot(fitted(Model2), resid(Model2, type = "pearson"))# this will create the plot
+abline(0,0, col="red")
+qqnorm(resid(Model2)) 
+qqline(resid(Model2), col = "red") # add a perfect fit line
+
+
+Model3 <- lmer(formula = Nitrification...ngN.gh. ~as.numeric(Genotype)+Time+(1|Block), 
+              data = Function.Data,REML = TRUE) #to run the model
+summary(Model3) 
+ls_means(Model3)
+
+
+
+plot(fitted(Model3), resid(Model3, type = "pearson"))# this will create the plot
+abline(0,0, col="red")
+
+
+qqnorm(resid(Model3)) 
+qqline(resid(Model3), col = "red") # add a perfect fit line
+
+outlier.test(resid(Model3))
+
+
+####Calculating H2
+hermodel <- lmer(formula = LogNit ~(1|Genotype)+(1|Time)+(1|Rep), 
+              data = Function.Data,REML = TRUE) #to run the model
+
+summary(hermodel) 
+mean(na.omit(Function.2017$LogNit))
+
+##This loop taken from website: https://github.com/mighster/BLUPs_Heritability/blob/master/BLUP_Tutorial.R
+#this empty dataframe is for variance components
+# DataVarComp <- data.frame()
+# DataVarCompOutput <- data.frame()
+# HeritabilityData <- data.frame()
+# 
+# #this empty dataframe is for dropped variance components
+# drops <- c("var1","var2","sdcor") 
+# varComp<-as.data.frame(VarCorr(hermodel,comp="vcov")) #function calculates estimated variances between random-effects terms in a mixed-effects model  blup = coef(model)$Entry
+# 
+#   blup = coef(hermodel)$Genotype #coef extracts model coefficients from lmer objects returned by modeling functions
+#   hist(blup[,1]) #plot it out
+#   #colnames(blup) <- trait #rename the BLUP column by the trait in our loop
+#   #add columns to existing dataframe   
+#   DataOutput <- cbind(DataOutput,blup) #ammends our dataframe with the new BLUP column for the new trait.
+#   
+#   #Modify variance component df by
+#   #deleting columns in variance component dataframe (we don't need it)
+#   varComp<-varComp[ , !(names(varComp) %in% drops)]
+#   #set the trait name from the loop
+#   varComp$Trait<-trait
+#   #add columns to existing dataframe
+#   DataVarComp <- rbind(DataVarComp,varComp) 
+
+#####
+
+######
+```
+
+
+Here is where I could like to write the code to determine if and how heretiable ntrification is within our Maize inbred lines
+First I will start by running a basic ASReml model and move on to a more complex model. 
+```{r, ASREML}
+
+library(asreml)
+
+###Loading Important Data###
+Function.2017=read.csv(file="MM2017_Function.csv",head=T)
+ Nit.2017 = read.csv(file ="MasterNitfication.csv", head = T)
+#This has all for the needed field, time and genotype data
+MetaData=read.csv(file="2017MappingFile.csv",head=T)
+
+#Here I need to merge the additional meta-data with the functional data. 
+test<-left_join(MetaData,Nit.2017, by=c("SampleID"="Sample.ID"))
+Nit.Data<-test%>%filter(!is.na(LogN))
+Nit.Data<-Nit.Data%>%unite(Block,Range,Row, remove=FALSE)
+Function.Data<-Function.2017%>%unite(Block,Range,Row, remove=FALSE)
+
+### What each column is labled as and the names of the colums
+str(Function.Data)
+str(Nit.Data)
+
+Function.Data$Block <- as.factor(Function.Data$Block)
+Function.Data$Time <- as.factor(Function.Data$Time)
+Function.Data$Range <- as.factor(Function.Data$Range)
+Function.Data$Row <- as.factor(Function.Data$Row)
+Function.Data$Rep <- as.factor(Function.Data$Rep)
+
+Nit.Data$Block <- as.factor(Nit.Data$Block)
+Nit.Data$Time <- as.factor(Nit.Data$Time)
+Nit.Data$Range <- as.factor(Nit.Data$Range)
+Nit.Data$Row <- as.factor(Nit.Data$Row)
+Nit.Data$Rep <- as.factor(Nit.Data$Rep)
+
+str(Nit.Data)
+names(Function.Data)
+
+#Turning the row column into a similar units
+Function.Data$Row <- as.numeric(Function.Data$Row)
+Function.Data$Range <- as.numeric(Function.Data$Range)
+Function.Data$Range <- as.factor(Function.Data$Range)
+Function.Data$Row <- as.factor(Function.Data$Row)
+
+#This code was related to changes in the community
+Function.Data$Row2<-Function.Data$Row/4-40
+Function.Data$Row2 <- as.factor(Function.Data$Row2)
+
+#Function.Data$Row/4-40
+names(Function.Data)
+
+##Start the model| In this model Genotype is fixed
+NitrificationModel<-asreml(data=Function.Data,
+                           fixed=Nitrification...ngN.gh.~Genotype,
+                           random= ~1+Time+Row:Rep+Range:Rep+Block,
+                           na.action = na.method(x = 'fail', y = 'omit'))
+##Running Model with corrected data 4/6/20
+NitData2<-Nit.Data[-c(115,196,289,288),]
+NitrificationModel<-asreml(data=Nit.Data,
+                           fixed=Nitrification.Rate..ngN.dm.gh.~Genotype,
+                           random= ~1+Time+Row:Rep+Range:Rep+Block,
+                           na.action = na.method(x = 'fail', y = 'omit'))
+
+plot(NitrificationModel)
+summary(NitrificationModel)
+summary.asreml(NitrificationModel,param = c("sigma", "gamma"),vparameters = TRUE)
+
+names(NitrificationModel)
+wald(NitrificationModel)
+
+#In the full model genotype is a significant factors 
+#               Df Sum of Sq Wald statistic Pr(Chisq)    
+# (Intercept)    1    864.37        17182.0 < 2.2e-16 ***
+# Genotype      26      2.31           45.8  0.009522 ** 
+# residual (MS)         0.05                             
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#Log Max likelyhood
+NitrificationModel$loglik
+
+##Looking at the fixed and random coff
+round(NitrificationModel$coefficients$fixed,2)
+round(head(NitrificationModel$coefficients$random, 10),2)
+
+#Variance compenets of error
+NitrificationModel$sigma2
+NitrificationModel$vparameters
+
+# We can get the variance components estimates by multiplying the gamma estimates by the residual error variance:
+NitrificationModel$sigma2*NitrificationModel$vparameters
+
+
+summary(NitrificationModel)$varcomp
+
+#Wal Test 
+wald(NitrificationModel, denDF = "numeric")
+plot(varioGram(NitrificationModel))
+
+
+#HHERE I WOULD LIKE TO RUN A MODEL WHERE GENOTYPE IS A RANDOM EFFECT 
+names(Function.Data)
+#Orginal Model 
+NitrificationModel<-asreml(data=Function.Data,
+                           fixed=Nitrification...ngN.gh.~Block,
+                           random= ~Time*Genotype+Row:Rep+Range:Rep,
+                           na.action = na.method(x = 'fail', y = 'omit'))
+
+#Estimating Missing values
+NitrificationModel<-asreml(data=Function.Data,
+                           fixed=Nitrification...ngN.gh.~Block,
+                           random= ~Time*Genotype+Row:Rep+Range:Rep)
+#When I run this in the model the Compoenet values become teny tiny
+# NitrificationModel<-asreml(data=Function.Data,
+#                            fixed=LogNit~Block,
+#                            random= ~Time*Genotype+Row:Rep+Range:Rep)
+
+NitrificationModel$pvals
+wald(NitrificationModel)
+vpc.char(NitrificationModel)
+NitrificationModel$vparameters
+NitrificationModel$vparameters.con
+summary(NitrificationModel)$varcomp
+#Here Time is V1, Genotype V2, Range:Rep V3, etc. 
+  #        Time      Genotype     Range:Rep       Row:Rep Time:Genotype       units!R 
+  # 0.009840246   0.275099421   0.000001600   0.097028295   0.232251160   1.000000000 
+#Vpredict pulls out the Varaince Parameter from the model 
+##SE Seems inflated not syre why. Here we are taking the genotypic var
+vpredict(NitrificationModel,h2~V2*2/(V1+V2+V3+V4+V5+V6))
+##The V6 Unit!R factors is giving me werid standard error terms.
+##Taking it out of future calcluations
+#Removing Unit Var6 (Error term)
+
+
+vpredict(NitrificationModel,h2~V2/(V1+V2+V4+V5))
+#    Estimate        SE
+# h2 0.4478848 0.3855242
+#All Total genetic contribution,
+vpredict(NitrificationModel,h2~(V5)/(V1+V2+V4+V5))
+#     Estimate        SE
+# h2 0.3781243 0.2936818
+vpredict(NitrificationModel,h2~V2*2/(V1+V2+V4+V5))
+
+##This model makes the most sense to me. 
+#Equation is Genotype VarCom+Genotype:Time Var Com/ Total Varaince
+vpredict(NitrificationModel,h2~(V2+V5)/(V1+V2+V4+V5))
+
+#Here Im just deived by the unit variance 
+vpredict(NitrificationModel,h2~(V2+V5)/(V6))
+# vpredict(NitrificationModel,h2~(((V2+V5))/(V1+V2+V4+V5+V6)))*NitrificationModel$sigma2
+
+
+##Modeling with no Fixed effects
+NitrificationModel<-asreml(data=Function.Data,
+                           fixed=Nitrification...ngN.gh.~1,
+                           random= ~Time*Genotype+Row+Range+Block)
+
+NitrificationModel<-asreml(data=Nit.Data,
+                           fixed=Nitrification.Rate..ngN.dm.gh.~1,
+                           random= ~Time*Genotype+Row+Range+Block)
+plot(NitrificationModel)
+summary(NitrificationModel)
+summary.asreml(NitrificationModel,param = c("sigma", "gamma"),vparameters = TRUE)
+
+names(NitrificationModel)
+#Signifncant intercept
+wald(NitrificationModel)
+
+
+#Log Max likelyhood
+NitrificationModel$loglik
+#-2463.08
+##Looking at the fixed and random coff
+round(NitrificationModel$coefficients$fixed,2)
+#Ploting the Random effect coffi
+round(head(NitrificationModel$coefficients$random, 10),2)
+
+#Variance compenets of error
+NitrificationModel$sigma2
+# [1] 67045266
+
+NitrificationModel$vparameters
+
+# We can get the variance components estimates by multiplying the gamma estimates by the residual error variance:
+NitrificationModel$sigma2*NitrificationModel$vparameters
+summary(NitrificationModel)$varcomp
+
+vpredict(NitrificationModel,h2~V4/(V6+V5+V4+V3+V2+V1))
+#       Estimate           SE
+# h2 1.497926e-07 6.059781e-08
+vpredict(NitrificationModel,h2~V4+V5/(V6+V5+V4+V3+V2+V1))
+#     Estimate        SE
+# h2 0.8474206 0.1522942
+####It seems like the mores where I add the genetic varaince seems to be the most heretible 
+
+
+##Lets try modeling space in the random factors now
+
+#Complex modling of Space
+NitrificationModel<-asreml(data=Function.Data,
+                           fixed=Nitrification...ngN.gh.~1,
+                           random= ~Time*Genotype+ar1v(Row):ar1(Range))
+#Complex modleing of time
+NitrificationModel<-asreml(data=Function.Data,
+                           fixed=Nitrification...ngN.gh.~1,
+                           random= ~ante(Time)*Genotype+Row+Range)
+
+summary(NitrificationModel)$varcomp
+NitrificationModel$vparameters.con
+
+h2<-vpredict(NitrificationModel,h2~V2/(V1+V2+V3+V4+V5+V6))
+h2<-vpredict(NitrificationModel,h2~(V2+V3)/(V1+V2+V3+V4+V5+V6))
+
+##Im going to start by modeling the time factor||This is the model I'm bulding from 
+NitrificationModel<-asreml(data=Function.Data,
+                           fixed=Nitrification...ngN.gh.~1,
+                           random= ~Genotype+Rep)
+##This is a weird simple model 
+summary(NitrificationModel)$varcomp
+h2<-vpredict(NitrificationModel,h2~V2/(V1+V2+V3))
+
+####Running Genotype as a Fixed Factor####
+##########################################
+
+#This model worked, I think  the issues with the dataframe formatting its self||| Here Im attempting to correct for staptial patterns. Here I am alos adding nugget effects to the model|| Addition of the nugget effect is giving the model some major issues in reaching the signulariy. Not sure what I can do about this. 
+#Note: I ran this set of models twice once with thr Raw data and once with the log transformed data. 
+NitrificationModel<-asreml(data=Function.Data,
+                          fixed=Nitrification...ngN.gh.~Genotype,
+                           random= ~idv(units))
+#Adding differetn time models|| Autoregressive model ar1 seems to be the best diectiber
+#Autoregressive movel - ar1
+N.asr.ar1<-asreml(data=Function.Data,
+                          fixed=LogNit~Genotype,
+                           random= ~ar1(Time))
+##Two models below gave Singularities in the average information matrix.ERRORs
+#Autoregressive modle -ar2
+# N.asr.ar2<-asreml(data=Function.Data,
+#                           fixed=Nitrification...ngN.gh.~Genotype,
+#                            random= ~ar2(Time))
+# #Autoregressive modle -ar3
+# N.asr.ar3<-asreml(data=Function.Data,
+#                           fixed=Nitrification...ngN.gh.~Genotype,
+#                            random= ~ar3(Time))
+
+summary(N.asr.ar1)
+wald(N.asr.ar1)
+summary(N.asr.ar1)$bic
+#4501
+#Log: -371.29
+#Symmetric autogegressive|| This model perfrom
+N.asr.sar<-asreml(data=Function.Data,
+                          fixed=LogNit~Genotype,
+                           random= ~sar(Time))
+summary(N.asr.sar)
+wald(N.asr.sar)
+summary(N.asr.sar)$bic
+#4505
+#Log -371.26
+#Moving Average model 
+N.asr.ma1<-asreml(data=Function.Data,
+                          fixed=LogNit~Genotype,
+                           random= ~ma1(Time))
+summary(N.asr.ma1)
+wald(N.asr.ma1)
+summary(N.asr.ma1)$bic
+# 4506
+#Log -371.29
+
+#autrogregressive moving Average model 
+# N.asr.ama1<-asreml(data=Function.Data,
+#                           fixed=Nitrification...ngN.gh.~Genotype,
+#                            random= ~arma(Time))
+# summary(N.asr.ama1)
+# wald(N.asr.ama1)
+# summary(N.asr.ama1)$bic
+
+#Missing genotype model
+N.asr.miss<-asreml(data=Function.Data,
+                          fixed=LogNit~1,
+                           random= ~sar(Time)+ar1(Range):ar1(Row))
+
+N.asr.miss<-asreml(data=Nit.Data,
+                          fixed=Nitrification.Rate..ngN.dm.gh.~1,
+                           random= ~sar(Time)+ar1(Range):ar1(Row))
+#####lets add some spatial compoenets to this model now:
+N.asr.full<-asreml(data=Function.Data,
+                          fixed=LogNit~Genotype,
+                           random= ~sar(Time)+ar1(Range):ar1(Row))
+summary(N.asr.full)
+
+N.asr.full<-asreml(data=Nit.Data,
+                          fixed=Nitrification.Rate..ngN.dm.gh.~Genotype,
+                           random= ~sar(Time)+ar1(Range):ar1(Row))
+summary(N.asr.full)
+# Notes on Wald test: The tests are sequential, that is the effect of each term is assessed by the change in sums of squares achieved by adding the term to the current model, given those terms appearing above the current term are already included. For example the effects of genotype is assessed by calculating the difference in sum of squares for to models
+wald(N.asr.full)
+#               Df Sum of Sq Wald statistic Pr(Chisq)    
+# (Intercept)    1    959.89        18480.2 < 2.2e-16 ***
+# Genotype      26      2.81           54.1 0.0009976 ***
+# residual (MS)         0.05                             
+
+summary(N.asr.full)$bic
+# -360.36
+##Nice the BIC of the model decreses across these factors. This is good news! 
+## So in this model genotype is the fixed effect while, Time is modeled as a symetic autoregressive model, and Range and row are modeld as autoregressive models with a degree of 1  
+##This is good news. I think we can report this! Genotype has an impact in shaping nitrogen cycling function at least nitrfication in the field. 
+
+##Calculating genotype effect by difference in models sums of squares at the intercepts
+waldfull<-wald(N.asr.full)
+waldmiss<-wald(N.asr.miss)
+
+#This is substracting the intercepts of the two models and deisving them by the orginal value 
+(waldfull[1,2]-waldmiss[1,2])/waldmiss[1,2]
+#SSw-SSwo/(SSwo)
+## 0.400901
+#Percent effect of Genotype in the model 
+##Need to figure out how I will be treating genotype time interactions in the model 
+
+##Here I will start the inclusion of interaction into the model!
+##From this fixed model I would like to generate a full random model 
+
+##Both-- Developed from the fixed model||| Surprisingly this model worked
+N.asr.full.ran<-asreml(data=Function.Data,
+                          fixed=Nitrification...ngN.gh.~1,
+                           random= ~Genotype*sar(Time)+ar1(Range):ar1(Row))
+
+N.asr.full.ran<-asreml(data=NitData2,
+                          fixed=Nitrification.Rate..ngN.dm.gh.~1,
+                           random= ~Genotype*sar(Time)+ar1(Range):ar1(Row))
+plot(N.asr.full.ran)
+summary(N.asr.full.ran)
+summary(N.asr.full.ran)$varcomp
+
+#This is probably wrong. 
+vpredict(N.asr.full.ran, h2~(V3+V4+V5)/(V1+V2+V3+V4+V5+V6+V7+V8))
+##Werid stuff is happening in the SE
+#     Estimate       SE
+# h2 0.3370422 60.06798
+
+vpredict(N.asr.full.ran, h2~(V3+V4)/(V1+V2+V3+V4+V5+V6+V7+V8))
+
+#  Idv function does not work 
+# NitrificationxModel<-asreml(data=Function.Data,
+#                            fixed=LogNit~Genotype+Time,
+#                            random=~idv(units),
+#                           residual = ~ar1v(Row):ar1(Range)
+#                           )
+
+
+
+Time1=subset(Function.Data, Time=="1")
+Time2=subset(Function.Data, Time=="2")
+Time3=subset(Function.Data, Time=="3")
+
+Time1=subset(NitData2, Time=="1")
+Time2=subset(NitData2, Time=="2")
+Time3=subset(NitData2, Time=="3")
+##I need to learn how to use more forgiving mormating
+##Heretibility estimates change over time. It peaks at our mid-season estimate falls in late season. Seems as if this trait needs time for the microbiome assembly. 
+N.asr.full.T1<-asreml(data=Time1,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+N.asr.full.T1<-asreml(data=Time1,
+                          fixed=Nitrification.Rate..ngN.dm.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+wald(N.asr.full.T1)
+summary(N.asr.full.T1)
+vpredict(N.asr.full.T1, h2~(V1)/(V1+V2+V3+V4))
+#      Estimate        SE
+# h2 0.08855309 0.1282984
+
+N.asr.full.T2<-asreml(data=Time2,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+
+N.asr.full.T2<-asreml(data=Time2,
+                          fixed=Nitrification.Rate..ngN.dm.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+wald(N.asr.full.T2)
+summary(N.asr.full.T2)
+vpredict(N.asr.full.T2, h2~(V1)/(V1+V2+V3+V4))
+#     Estimate       SE
+# h2 0.5977937 0.110737
+
+N.asr.full.T3<-asreml(data=Time3,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+
+N.asr.full.T3<-asreml(data=Time3,
+                          fixed=Nitrification.Rate..ngN.dm.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+wald(N.asr.full.T3)
+summary(N.asr.full.T3)
+vpredict(N.asr.full.T3, h2~(V1)/(V1+V2+V3+V4))
+#     Estimate SE
+# h2 0.4993886  0
+#Its weird to see how this data is the same thing as the other data set withinout teosinte 
+
+###This is sooo cool! Now it seems like these processes need to be understood more persisly 
+#Average H2 over the season. 
+
+####Need to perfrom an outliter test on the data, I probably should also try to control the space and time factor
+library(psych)
+d2 <- outlier(Function.Data[,10:13], bad = 5, na.rm = TRUE)
+
+sat.d2 <- data.frame(Function.Data[,10:13], d2)
+pairs.panels(sat.d2,bg=c("lightgreen","blue")[(d2 > 25)+1],pch=21)
+
+#Lots of bad outliers:: Need to remove 139,294,129,289
+Function.Data.Nooutier<-Function.Data[-c(129,139,289,294,131),]
+
+#Test for outliers
+d2 <- outlier(Function.Data.Nooutier[,10:13], bad = 5, na.rm = TRUE)
+
+sat.d2 <- data.frame(Function.Data.Nooutier[,10:13], d2)
+pairs.panels(sat.d2,bg=c("lightgreen","blue")[(d2 > 25)+1],pch=21)
+
+
+names(Function.Data.Nooutier)
+str(Function.Data.Nooutier)
+
+
+N.asr.full.ran<-asreml(data=Function.Data.Nooutier,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype*sar(Time)+ar1(Range):ar1(Row))
+
+
+summary(N.asr.full.ran)
+
+
+```
+
+
+```{r, Maize Models}
+### Working in the A-matrix into the genetic analysis
+#####Modern Maize Treatments only####
+###Inbred do not seem to contain a considerable amount of varation in nitrogen cycling function
+library(asreml)
+Inbred=subset(Function.Data, Type=="Inbred")
+str(Inbred)
+names(Inbred)
+inbred.asr.fixed<-asreml(data=Inbred,
+                   fixed=Nitrification...ngN.gh.~ Genotype,
+                   random=~sar(Time)+ar1(Range):ar1(Row))
+
+inbred.asr.ran<-asreml(data=Inbred,
+                   fixed=Nitrification...ngN.gh.~1,
+                   random=~Genotype*sar(Time)+ar1(Range):ar1(Row))
+
+plot(inbred.asr.fixed)
+plot(inbred.asr.ran)
+
+wald(inbred.asr.fixed)
+wald(inbred.asr.ran)
+
+#Summary of the model
+summary(inbred.asr.fixed)
+summary(inbred.asr.ran)
+
+#Log Max likelyhood
+inbred.asr.fixed$loglik
+
+##Looking at the fixed and random coff
+round(inbred.asr.fixed$coefficients$fixed,2)
+round(head(inbred.asr.fixed$coefficients$random, 10),2)
+
+#Variance compenets of error
+inbred.asr.fixed$sigma2
+inbred.asr.fixed$vparameters
+
+# We can get the variance components estimates by multiplying the gamma estimates by the residual error variance:
+MaizeModel$sigma2*MaizeModel$vparameters
+summary(MaizeModel)$varcomp
+
+#Wal Test 
+wald(MaizeModel, denDF = "numeric")
+
+##This can only be estimated by the random model
+summary(inbred.asr.ran)$varcomp
+##Estimating H2
+#estimate additive variance
+vpredict(inbred.asr.ran, h2 ~ V3+V4/(V1+V2+V3+V4))
+##Seems like the inbreds have no genetic variablity
+##I think this is because of intense selection in the trait let me try different time modles
+
+
+InbredTime1=subset(Inbred, Time=="1")
+InbredTime2=subset(Inbred, Time=="2")
+InbredTime3=subset(Inbred, Time=="3")
+
+###
+N.asr.full.T1<-asreml(data=InbredTime1,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+
+summary(N.asr.full.T1)
+vpredict(N.asr.full.T1, h2~(V1)/(V1+V2+V3+V4))
+#        Estimate           SE
+# h2 1.028995e-06 1.026536e-05
+
+N.asr.full.T2<-asreml(data=InbredTime2,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+
+summary(N.asr.full.T2)
+vpredict(N.asr.full.T2, h2~(V1)/(V1+V2+V3+V4))
+#        Estimate           SE
+# h2 8.810419e-08 8.973075e-08
+
+##This moodle is not working|| Not sure why
+N.asr.full.T3<-asreml(data=InbredTime3,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype+ar1(Range):ar1(Row))
+
+summary(N.asr.full.T3)
+vpredict(N.asr.full.T3, h2~(V1)/(V1+V2+V3+V4))
+#     Estimate SE
+# h2 0.4993886  0
+
+####Let run the fixed model
+####
+
+#Time 1
+N.asr.full.T1<-asreml(data=InbredTime1,
+                          fixed=Nitrification...ngN.gh.~Genotype,
+                                       random= ~ar1(Range)*ar1(Row))
+wald(N.asr.full.T1)
+#Time 2
+N.asr.full.T2<-asreml(data=InbredTime2,
+                          fixed=Nitrification...ngN.gh.~Genotype,
+                                       random= ~ar1(Range)*ar1(Row))
+wald(N.asr.full.T2)
+
+#Time 3 : My time point three is having issues even running. Need to look at and clean the data
+N.asr.full.T3<-asreml(data=InbredTime3,
+                          fixed=Nitrification...ngN.gh.~Genotype,
+                                       random= ~ar1(Range)*ar1(Row))
+wald(N.asr.full.T3)
+```
+
+Here I will look at the dataset as both inbred and hybrid data. I think that this 
+```{r, Hybrid+Maize Analysis}
+##Subsetting out maize without teosinte 
+ModMaize=subset(Function.Data, Type!="Teosinte")
+#ModMaize=subset(Function.Data, Type=="Hybrid")
+
+names(ModMaize)
+
+###I may need to add the genetic relatedness into this model | It could be that we do not have a clear understanding of this process
+ModMaize.asr<-asreml(data=ModMaize,
+                   fixed=LogNit~ Genotype,
+                   random=~sar(Time)+ar1(Range):ar1(Row))
+wald(ModMaize.asr)
+
+ModMaize.asr<-asreml(data=ModMaize,
+                   fixed=LogNit~ Genotype,
+                   random=~sar(Time)+ar1(Range)*ar1(Row))
+wald(ModMaize.asr)
+
+##Perhaps these microbiome traits have been messed 
+ModMaizeTime1=subset(ModMaize, Time=="1")
+ModMaizeTime2=subset(ModMaize, Time=="2")
+ModMaizeTime3=subset(ModMaize, Time=="3")
+
+##Genotype within the plants seems to peak during key growth times. 
+#Time 1
+N.asr.full.T1<-asreml(data=ModMaizeTime1,
+                          fixed=LogNit~Genotype,
+                                       random= ~ar1(Range)*ar1(Row))
+wald(N.asr.full.T1)
+#Time 2
+N.asr.full.T2<-asreml(data=ModMaizeTime2,
+                          fixed=LogNit~Genotype,
+                                       random= ~ar1(Range)*ar1(Row))
+wald(N.asr.full.T2)
+#This model has inbred and hybrid genotypes
+#               Df Sum of Sq Wald statistic Pr(Chisq)    
+# (Intercept)    1    8.4913         103786   < 2e-16 ***
+# Genotype      20    0.0023             28   0.09866 .  
+# residual (MS)       0.0001                             
+
+##This model only has the hybrid genotypes-- Hybrids seem to haev the diversity to alter
+#               Df Sum of Sq Wald statistic Pr(Chisq)    
+# (Intercept)    1 0.0044710        20172.2 < 2.2e-16 ***
+# Genotype       8 0.0000045           20.2  0.009536 ** 
+# residual (MS)    0.0000002                             
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+
+#Random model time 2
+N.asr.ran.T2<-asreml(data=ModMaizeTime2,
+                          fixed=Nitrification...ngN.gh.~1,
+                                       random= ~Genotype+ar1(Range)*ar1(Row))
+summary(N.asr.ran.T2)
+#Since these are all half-sibs of each other I multipled the factor by 2 not sure if right
+vpredict(N.asr.ran.T2,h2~(V3*2)/(V1+V2+V3+V4+V5+V6))
+#     Estimate       SE
+# h2 0.0529859 0.260151
+
+###V3*2
+#     Estimate       SE
+# h2 0.1059718 0.520302
+
+#Time 3 : My time point three is having issues even running. Need to look at and clean the data
+N.asr.full.T3<-asreml(data=ModMaizeTime3,
+                          fixed=LogNit~Genotype,
+                                       random= ~ar1(Range)*ar1(Row))
+wald(N.asr.full.T3)
+
+```
+##Now Im ready to incorporating the A relatedness matrix 
+
+```{r, A-Matrix with relatedness values}
+##This should allow us to calculate the addative var by using the genetic relatedness 
+##I need to turn my SNP data, into a G-matrix which means that I need to recode it in such a way that allows for the easy alteration to the correction formatting. ASReml manual recommend using a symbreeding package for those purposes, but it seems like that package has been discontinued. Im going to try to use SnpReady.
+library(snpReady)
+library(tidyverse)
+
+##I put a considerable amoun of effort into understanding how to actually incorrpoate the snp data set. The major issue is that there were avout 600000 postions, and it made estimates very time consuming to transfrom the data to correctly fit into the ASREML model. Because of this I instead decided to use the IBD matrix as a proxity for genetic relatedness. 
+# geno <- read.table("http://italo-granato.github.io/geno.txt", header = TRUE, na.strings = "NA")
+# head(geno)
+# 
+# geno.ready <- raw.data(data = as.matrix(geno), frame = "long", base = TRUE, sweep.sample = 0.5, call.rate = 0.95, maf = 0.10, imput = FALSE)
+# M <- geno.ready$M.clean
+# M[1:10,1:5]
+# 
+# geno.ready$report
+# 
+# geno.ready2 <- raw.data(data = as.matrix(geno), frame = "long", base = TRUE, sweep.sample = 0.5, call.rate = 0.95, maf = 0.10, imput = TRUE, imput.type = "wright", outfile = "012")
+# Mwrth <- geno.ready2$M.clean
+# Mwrth[1:10,1:5]
+# 
+# 
+# geno.readySTR <- raw.data(data = as.matrix(geno), frame = "long", base = TRUE, sweep.sample = 0.5, call.rate = 0.95, maf = 0.10, imput = FALSE, outfile = "structure")
+# Mstr <- geno.readySTR$M.clean
+# Mstr[1:10,1:5]
+# 
+# G <- G.matrix(M = Mwrth, method = "VanRaden", format = "wide") 
+# Ga <- G$Ga
+# Ga[1:5,1:5]
+# 
+# G <- G.matrix(M = Mwrth, method = "UAR", format = "wide") 
+# G[1:5,1:5]
+# 
+# G <- G.matrix(M = Mwrth, method = "UAR", format = "long") 
+# head(G)
+
+#This long formating done by the g.matrix outputs the inverse which can direclty be incorporated into ASME
+# genotest <- read.csv("~/Documents/Projects/Projects/Maize Microbiome/MM2017/Data/Genotype.Hybrid.hmp.csv", header = TRUE, na.strings = "NA")
+# 
+# genotest2<-genotest[,-c(2:11)]
+
+# library(naniar)
+# 
+# genotest2<-genotest2 %>% replace_with_na_all(condition= ~.x=="N")
+# 
+# 
+# geno.ready.2 <- raw.data(data = as.matrix(genotest2), frame = "wide", base = TRUE, sweep.sample = 0.5, call.rate = 0.95, maf = 0.10, imput = FALSE)
+# M <- geno.ready$M.clean
+# M[1:10,1:5]
+##Getting the genetic map showed itself to be too difficult 
+
+#####Using Distrance matrix in the model as a cofactor to explain the variance 
+
+genotest <- read.csv("~/Documents/Projects/Projects/Maize Microbiome/MM2017/Data/Genotype.Distance.Matrix.csv", header = TRUE, na.strings = "NA")
+
+##Calculating the Inverse Matrix
+genotest2<-genotest[-1]
+genotest2<-abs(genotest2-1)
+
+Z=solve(genotest2)
+as.matrix.csr(Z)
+
+Z<-as.data.frame(Z)
+Z<-cbind(taxa = genotest[1], Z)
+
+
+##THis Gmatrix was determined in tassel using the IBU 
+GMatrix <- gather(genotest, Taxa2, Distance, B73:Mo17, factor_key=TRUE)
+GMatrix <- gather(Z, Taxa2, Distance, V1:V20, factor_key=TRUE)
+
+sp2Matrix(GMatrix, dense = TRUE, triplet = TRUE)
+##This makesure that the genotype names are matching that of the mapping file 
+GMatrix<-GMatrix %>% 
+  mutate(Taxa2 = str_replace(Taxa2, "\\.", "/"))
+
+##Let put it in the model 
+
+#attribute INVERSE set to TRUE
+attr(GMatrix, "INVERSE") <- TRUE
+attr(GMatrix,"rowNames") <- paste(GMatrix$Taxa)
+#rowNames attribute
+attr(sire.giv, "rowNames") <- paste("Sire_", seq(1, 9), sep = "")
+attr(sire.giv, "rowNames")
+
+
+GMatrix<-GMatrix[
+  with(GMatrix, order(Taxa2)),
+]
+
+solve(GMatrix)
+
+ModMaize.asr<-asreml(data=ModMaize,
+                   fixed=LogNit~1,
+                   random=~vm(Genotype,GMatrix)+sar(Time)+ar1(Range)*ar1(Row))
+
+wald(ModMaize.asr)
+
+
+```
+
+
+```{r, qPCR stats}
+##BEFORE YOU run this make sure that you write the code to load the qPCR data 6/8/20
+setwd("~/Documents/Projects/Projects/Maize Microbiome/MM2017/Data/RDATA")
+
+Function.2017=read.csv(file="../RDATA/MM2017_Function.csv",head=T)
+
+
+amoA.results <- full_join(AamoA.results.m, Function.2017, by = c("Group.1"="Samples"))
+bamoA.results <- full_join(BamoA.results.m,Function.2017, by=c("Group.1"="Samples"))
+nifh.results <- full_join(nifH.results.m, Function.2017, by = c("Group.1"="Samples"))
+nirK.results <- full_join(nirK.results.m, Function.2017, by = c("Group.1"="Samples"))
+nirS.results <- full_join(nirS.results.m, Function.2017, by = c("Group.1"="Samples"))
+nosZI.results <- full_join(nosZI.results.m, Function.2017, by = c("Group.1"="Samples"))
+
+#Genotypes
+boxplot(amoA.results$copies ~ amoA.results$Genotype,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(bamoA.results$copies ~ bamoA.results$Genotype,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nifh.results$copies ~ nifh.results$Genotype,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nirK.results$copies ~ nirK.results$Genotype,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nirS.results$copies ~ nirS.results$Genotype,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nosZI.results$copies ~ nosZI.results$Genotype,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+#Type
+boxplot(amoA.results$copies ~ amoA.results$Type,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(bamoA.results$copies ~ bamoA.results$Type,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nifh.results$copies ~ nifh.results$Type,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nirK.results$copies ~ nirK.results$Type,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nirS.results$copies ~ nirS.results$Type,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nosZI.results$copies ~ nosZI.results$Type,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+
+#Time
+boxplot(amoA.results$copies ~ amoA.results$Time,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(bamoA.results$copies ~ bamoA.results$Time,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nifh.results$copies ~ nifh.results$Time,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nirK.results$copies ~ nirK.results$Time,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nirS.results$copies ~ nirS.results$Time,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+boxplot(nosZI.results$copies ~ nosZI.results$Time,las=2,xlab =NA,
+        ylab="Gene Copy Number (ng/ul)",main="nifH in NIL Rhizosphere")
+
+##Ploting time
+
+amoA.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+bamoA.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nifh.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nirK.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nirS.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nosZI.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+
+amoA.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=log(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+bamoA.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=log(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nifh.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=log(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nirK.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=log(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nirS.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=log(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+nosZI.results%>%filter(!is.na(Time))%>%
+        ggplot(aes(x=as.character(Time), y=log(copies)))+
+        geom_boxplot(aes(fill=Genotype))
+
+```
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
