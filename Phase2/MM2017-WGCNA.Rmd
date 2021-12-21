@@ -99,8 +99,6 @@ OTU <- OTU + 1
 sum(which(OTU == 0))
 
 #function to filter out OTUs with abundance < 0.01%
-# This will liekly remove a ton of data: It kinda seems like the really high high seek picks up alot of weird stuff in it. 
-#I think this is based on the read count? so if the read cound is 100000, then at a 1% there should be at least 10000 reads for the OTU. I think I may make it 001% I really want to remove singletons not micobes that are. 
 # *To do this I changed the percentage to 1%*
 low.count.removal = function(
 data,
@@ -135,7 +133,6 @@ OTU_TSS <- t(apply(data.filter, 1, TSS.divide))
 OTU_norm <- log2(OTU_TSS)
 rownames(OTU_norm)
 
-# subset metadata to include only those in nifH_norm
 samples <- rownames(OTU_norm)
 samples
 env <- subset(metadata, Samples %in% samples)
@@ -162,12 +159,8 @@ rownames(env1)
 rownames(OTU_norm)
 
 rownames(OTU_norm) == rownames(env1)
-# I think it's okay, they are just in a different order...
 
-#Here is where filtering would need to take place to effectively alter the microbail communtiy. It seems like the 224 is where the teosinte start
-#THis Chunck of code creates the maize exclusize data
-# OTU_norm<-OTU_norm[-c(224:294),]
-# env1<-env1[-c(224:294),]
+
 
 ```
 
