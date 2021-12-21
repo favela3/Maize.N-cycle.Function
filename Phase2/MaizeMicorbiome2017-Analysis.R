@@ -1,12 +1,8 @@
 ##Alonso Favela 
-#Purpose: Here is the beginning of the analysis of the 2017 study ====
-#The code was designed to work in Tony's folder set up! 
-#This website seems like an interesting resource #https://bradleyboehmke.github.io/HOML/ 
+#Maize Microbiome 2017 study ====
 
 ##Load Programs ==
-setwd("/Volumes/AlonsoF - HD - Kent Lab/Maize Microbiome 2017/Maize Micorbiome Analysis ")
-
-setwd("/Volumes/AlonsoF - HD - Kent Lab/Maize Microbiome 2017/Seqeunce Data (HD copy)/Maize Micorbiome Analysis ")
+setwd("/Maize Micorbiome Analysis ")
 
 
 library(phyloseq)
@@ -27,14 +23,13 @@ Map = import_qiime_sample_data("Data/2017MappingFile-R.txt")
 OTU16S = merge_phyloseq(biomOTU, Map)
 
 
-#Removing Outlier files > These microbial communites are way way out their for some reason
+#Removing Outlier files 
  OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T2.041")
  OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T3.037")
  OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T2.027")
  OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T2.040")
  OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T3.063")
  
-OTU16S <- subset_samples(OTU16S, Time != "R")
 
 ##Alpha Diversity of 16S ====
 #measurment of alpha diversity
@@ -98,7 +93,6 @@ pdf("Output/GenotypeCloud.pdf",width=6,height=4,paper='special')
 print(p1)
 dev.off()
 
-#Need to remove everything that is not inbred. #It seems like their might have been a sweep in micorbial community recruitment prior to the 1960
 ##Inbred Time analysis ====
 OTU16S <- subset_samples(OTU16S, Type == "Inbred")
 
@@ -318,10 +312,8 @@ p2=plot_bar(OTU16S, "Genotype", fill = "Family", facet_grid = ~Class)+
   theme(text=element_text(family = "Helvetica",size=14))
 print(p2)
 
-#R seems to be having trouble plotting my figures. To address this im going to try reducing the data set
 
 ###Here we are sorting and filtering the OTUS====
-##Here we can see that the community is pretty different. These need to be realtives by sample
 GenotypeAve = merge_samples(OTU16S, "Type", fun = mean) #averages each OTU in all samples belonging to each habitat class
 sample_data(GenotypeAve)$Type <- levels(sample_data(OTU16S)$Type)
 #relative byt total bumber of genes
@@ -341,7 +333,6 @@ plot_bar(OTU10, "Type", fill = "Order", facet_grid = ~Phylum)+
   theme(legend.position="none")+
   geom_bar(stat="identity")+scale_y_continuous(labels = scales::percent)
 
-##Im going to avarge the values by 100
 
 OTU_rel_merge = transform_sample_counts(OTU_merge, function(x) 100 * x/sum(x) )
 NitrifersOTU=subset_taxa(OTU_rel_merge, Phylum == "Nitrospirae"|Order=="Nitrosomonadales"|Order=="Nitrososphaerales")
@@ -355,15 +346,12 @@ print(p2)
 ###I should Run DSEQ2
 
 ####Nitrogen Cycling Genes======
-##So for this analysis it does infact seem like we rarfeied correctly.
-#Notes: The nifH genes seem to be the worst results. 
 ### Nitrogen Fixation ====
 nifH_biom_file = import_biom("Data/otu_table_nifH_UR.biom")
 Map = import_qiime_sample_data("Data/2017MappingFile-R.txt")
 OTUnifHAll = merge_phyloseq(nifH_biom_file, Map)
 
 ###Rarefaction of the functional genes and transformation=====
-#I think I major issue is that the nifH wasnt rarefied and the abs is real low
 rarecurve(t(otu_table(OTUnifHAll)), step=5, cex=0.5)
 
 #set.seed(4)
@@ -371,9 +359,8 @@ OTUnifH.rarefied= rarefy_even_depth(OTUnifHAll, rngseed=4, sample.size=500, repl
 #ps.rarefied = rarefy_even_depth(ps, rngseed=1, sample.size=0.9*min(sample_sums(ps)), replace=F)
 rarecurve(t(otu_table(OTUnifH.rarefied)), step=5, cex=0.5)
 
-#Transforming samples!
+#Transforming samples
 #OTUnifH <- transform_sample_counts(OTUnifH, log)
-#Theres too many low and filed data!! Ugh nifH is supppose to be the best
 OTUnifH<-OTUnifH.rarefied
 #Outliers samples
 #Set1 Outliers
@@ -397,7 +384,6 @@ plot_richness(OTUnifH, x = "Genotype", measures = "Chao1") +
 
 plot_richness(OTUnifH, x = "Type", measures = "Chao1") +
   theme(text=element_text(family = "Helvetica",size=14))+geom_boxplot()
-#### This lower diversity in Nirogen cycling taxa is weird, but Im sure the abundance is higer
 
 p1<-plot_richness(OTUnifH, x = "Time", measures = "Chao1") +
   theme(text=element_text(family = "Helvetica",size=14))+geom_boxplot()
@@ -437,8 +423,6 @@ dev.off()
 p1 = plot_ordination(OTUnifH, GP.ord, type="Samples", color="Time",  title="NifH Ordination")+geom_point(size=2)
 print(p1)
 
-###Now I'm going to pull out all of the indivdual values to see how they fair
-##Since these are soo messy it may be best to look at this data differently 
 
 inbrednifH <- subset_samples(OTUnifH, Type == "Inbred")
 
@@ -511,7 +495,7 @@ print(Richness)
 dev.off()
 ##Genotype Average
 OTU_merge = merge_samples(OTUAamoAAll, "Genotype", fun = mean) #averages each OTU in all samples belonging to each habitat class
-OTU_merge = transform_sample_counts(OTU_merge, function(x)  x/4 )  ##Need to include this in the data|| This is divdiing the data
+OTU_merge = transform_sample_counts(OTU_merge, function(x)  x/4 )  ##Need to include this in the data
 sample_data(OTU_merge)$Genotype <- levels(sample_data(OTUAamoAAll)$Genotype)
 #sample_data(OTU_merge)$Type <- levels(sample_data(OTU16S)$Type)
 
@@ -661,7 +645,6 @@ plot_bar(Type.Sig.Ave, "Type", fill = "Phylum", facet_grid = ~Kingdom)+
 ##Here Im removeing all of the NA and Archea
 Type.Ave_trans.2=subset_taxa(Type.Sig.Ave, Kingdom == "Bacteria")
 
-#Significant OTUs from types|| Relative abudnace needs to be corrected
 ###Figure 2 Stack plot =====
 ##A
 plot_bar(Type.Ave_trans.2, "Type", fill = "Phylum", facet_grid = ~Kingdom)+geom_bar(stat="identity")+
@@ -688,7 +671,6 @@ print(Richness)
 pdf("Output/BACT-DiversityinTime.pdf",width=6,height=4,paper='special') 
 print(Richness)
 
-#Need to average the data points to create a stack plot that makes sense
 amoBAve = merge_samples(OTUBamoAAll, "Genotype", fun = mean) #averages each OTU in all samples belonging to each habitat class
 sample_data(amoBAve)$Genotype <- levels(sample_data(OTUBamoAAll)$Genotype)
 amoBAve = transform_sample_counts(amoBAve, function(x) 100 * x/sum(x) )
@@ -725,7 +707,6 @@ print(Richness)
 #pdf("Output/BACT-DiversityinTime.pdf",width=6,height=4,paper='special') 
 print(Richness)
 
-#Need to average the data points to create a stack plot that makes sense
 nirSAve = merge_samples(OTUBnirSAll, "Genotype", fun = mean) #averages each OTU in all samples belonging to each habitat class
 sample_data(nirSAve)$Genotype <- levels(sample_data(OTUBnirSAll)$Genotype)
 nirSAve = transform_sample_counts(nirSAve, function(x) 100 * x/sum(x) )
@@ -738,7 +719,6 @@ print(p)
 p = plot_bar(nirSAve, "Genotype", fill = "Rank2", "Abundance", 
              title=title)+ geom_bar(aes(fill=OTU), stat="identity", position="stack")+theme(legend.position = ("none"))
 print(p)
-#Need to average the data points to create a stack plot that makes sense
 nirSAve = merge_samples(OTUBnirSAll, "Type", fun = mean) #averages each OTU in all samples belonging to each habitat class
 sample_data(nirSAve)$Type <- levels(sample_data(OTUBnirSAll)$Type)
 nirSAve = transform_sample_counts(nirSAve, function(x) 100 * x/sum(x) )
@@ -763,7 +743,6 @@ print(Richness)
 #pdf("Output/BACT-DiversityinTime.pdf",width=6,height=4,paper='special') 
 print(Richness)
 
-#Need to average the data points to create a stack plot that makes sense
 nirKAve = merge_samples(OTUBnirKAll, "Genotype", fun = mean) #averages each OTU in all samples belonging to each habitat class
 sample_data(nirKAve)$Genotype <- levels(sample_data(OTUBnirKAll)$Genotype)
 nirKAve = transform_sample_counts(nirKAve, function(x) 100 * x/sum(x) )
@@ -776,7 +755,8 @@ print(p)
 p = plot_bar(nirSAve, "Genotype", fill = "Rank2", "Abundance", 
              title=title)+ geom_bar(aes(fill=OTU), stat="identity", position="stack")+theme(legend.position = ("none"))
 print(p)
-#Need to average the data points to create a stack plot that makes sense
+
+                                  
 nirKAve = merge_samples(OTUBnirKAll, "Type", fun = mean) #averages each OTU in all samples belonging to each habitat class
 sample_data(nirKAve)$Type <- levels(sample_data(OTUBnirKAll)$Type)
 nirKAve = transform_sample_counts(nirKAve, function(x) 100 * x/sum(x) )
@@ -800,7 +780,6 @@ Richness<-plot_richness(OTUBnirKAll, x = "Genotype", measures = "Chao1") +
 print(Richness)
 
 ####### ITS fungi  ======
-##this File in unrarefied. Need to go in and find the Rarifeid biom file 
 biom_file = import_biom("Data/otu_table_ITS_UR.biom")
 biom_file = import_biom("Data/ITS_table_rarefied_10000.biom")
 
@@ -853,7 +832,6 @@ print(p1)
 pdf("Output/ITSTimeNMDS.pdf",width=6,height=4,paper='special') 
 print(p1)
 dev.off()
-##Now I need to start taking the averages of these data and make it into something that can actually be understood by researcher
 
 ##Manuscript Figure 1C=====
 OTU_merge = merge_samples(OTUAITSAll, "Genotype", fun = mean) #averages each OTU in all samples belonging to each habitat class
@@ -872,7 +850,7 @@ pdf("Output/ITSTypeGenotype2.pdf",width=6,height=4,paper='special')
 print(p1)
 dev.off()
 ##Manuscript Figure 1D====
-OTU_merge = merge_samples(OTUAITSAll, "GxTFactor", fun = mean) ##This mean function is only summing the values. Which means we must write more code to divide by the total
+OTU_merge = merge_samples(OTUAITSAll, "GxTFactor", fun = mean) ##This mean function is only summing the values.
 GxTAve = transform_sample_counts(OTU_merge, function(x)  x/4 )  ##Need to include this in the data|| This is divding the data
 
 
@@ -918,10 +896,8 @@ print(p)
 
 -
 ### Statisical Analysis: 2017 Maize Micorbiome BELOW ======
-#10.1.19: After looking at the data in ordination I determined that there were two outlier micorbial communites
 #These Outliers are MM17.T3.037 and MM17.T2.041 Outlier figure is present in Output folder
-#Im going to remove them and see how the data shapes up.
-#There are pretty strong genotype effects. I think that the phylogeny that I cal
+
 library(vegan)
 library(reshape2)
 library(ggplot2)
@@ -940,37 +916,6 @@ OTU16SAll= subset(OTU16SAll, X.SampleID != "MM17.T2.040")
 OTU16SAll= subset(OTU16SAll, X.SampleID != "MM17.T3.063")
 
 
-#When removing samples I need to make sure that I'm directing it into the correct file
-
-#Remove the rhizosphere samples 
-#When I run the rhizopshere samples in the model it comes out as sigifincant 
-OTU16S= subset(OTU16SAll, Time != "R")
-# OTU16S= subset(OTU16S, Type != "Teosinte")
-# OTU16S= subset(OTU16S, Genotype != "CHECK1")
-# OTU16S= subset(OTU16S, Genotype != "CHECK2")
-# OTU16S= subset(OTU16S, Type != "Hybrid")
-
-# Making different types of files based on subsetting and Saving that data as an OTU 11/5/19-----
-
-#Pulling out the meta data and the OTU data, This was before I pulled out the Rhizosphere data. Here I will only be uisng the paired data. 
-# The rhizospher bulk soul is the only paired data
-JustOTU16S<-OTU16S[,9:37604]
-JustMeta<-OTU16S[,1:8]
-JustMeta<-JustMeta[,-1]
-
-#Rename the rows based on the sample IDs
-rownames(JustOTU16S) <- as.character(unlist(OTU16S[,2]))
-
-#I may want to use dplyer to combine the meta infromation. 
-# write.csv(JustOTU16S,'WGCNA/MM2017_OTU_w-r.csv') 
-# write.csv(JustMeta,'WGCNA/MM2017_Meta.csv') 
-
-#Lets plot the density
-x<-melt(log(JustOTU16S[,1:1000]))
-# ggplot(data=x, aes(x=value,stat(count),fill=variable))+geom_density( position="stack")+stat_density()+theme(legend.position = "none")
-
-
-#Now I need to make a taxa table the matches the OTUs
 
 
 ##Hear we are finding the genotypic mean || Here Im calcluatig the mean of a genotype- across time
@@ -1012,18 +957,16 @@ library(ape)
 Bob<-nj(as.dist(MCDistance)) 
 plot(hclust(as.dist(MCDistance)))
 
-#These models and results include all of the genotypes- hybrids, inbred, teosinte etc. 
-##Here we are making an additional row range variable. This is the model that makes the most sense to me. Here we have three important factors, Plant genotype, Time, Rep
 adonis(MM.16S.spec ~ Genotype*Time+Row+Range+RangeRow, MM.16S.t.Model)
 Model16S<-adonis(MM.16S.spec ~ Genotype*Time+Row+Range+RangeRow, MM.16S.t.Model)
 
 #overall 30% of the community is explained by plant + 7% by Time (seasonality, temp, etc) + 25-30% Space (current location and spatial gradient) of the variance 
 #There does not seem to be a signifcant Space*Time interaction here, but for some reason it does explain lots of varaince in the model. 
 # Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-#   Genotype       26    4.2653 0.16405  2.3051 0.14695  0.001 *** #The genetic of the plant alter the micorbial community and this happens as a function of time. 
-#   Time            2    2.0737 1.03683 14.5690 0.07144  0.001 *** #Time is important. these micorbes are responding only to time, indpeende of plant. 
-#   RangeRow       74    7.8639 0.10627  1.4932 0.27093  0.001 *** #This is the block factor and is important. Space i.e. starting MC be a good predictor of the community. 
-#   Genotype:Time  52    4.8705 0.09366  1.3161 0.16780  0.001 *** #This time interaction can be seen here. Genotypes vary in there selection through time. 
+#   Genotype       26    4.2653 0.16405  2.3051 0.14695  0.001 ***  
+#   Time            2    2.0737 1.03683 14.5690 0.07144  0.001 ***  
+#   RangeRow       74    7.8639 0.10627  1.4932 0.27093  0.001 ***  
+#   Genotype:Time  52    4.8705 0.09366  1.3161 0.16780  0.001 *** 
 ###Time:RangeRow 114    8.5293 0.07482  1.0513 0.29385  0.222    
 #   Residuals      20    1.4233 0.07117         0.04904           
 # Total         288   29.0260                 1.00000           
@@ -1046,7 +989,6 @@ adonis(MM.16S.spec ~ Type*Time+Row+Range+RangeRow, MM.16S.t.Model)
 ##Here 
 adonis(MM.16S.spec ~ Genotype*Time+Row+Range+RangeRow, MM.16S.t.Model, strata=MM.16S.t.Model$RangeRow)
 
-#Here I want to see if this model can inproved by adding a specfic sptatil interaction term. Which would be grabage if signifcant. 
 adonis(MM.16S.spec ~ Genotype*RangeRow*Time+Row+Range, MM.16S.t.Model)
 # Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
 # Genotype                26    4.2653 0.16405  2.1773 0.14695  0.001 ***
@@ -1064,8 +1006,7 @@ adonis(MM.16S.spec ~ Genotype*RangeRow*Time+Row+Range, MM.16S.t.Model)
 
 #Calculate the distance 
 adonis(MM.16S.spec ~ Genotype+Time+Rep, MM.16S.treatment)
-##Results below included the outliers T3.037 and T2.041
-#ANOVA results are basically the same with and without the removal of outliers
+
 #Genotype is a more significant factor then time. 
 #adonis(formula = MM.16S.spec ~ Genotype + Time + Rep + Type,      data = MM.16S.treatment)
 # Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
@@ -1173,7 +1114,6 @@ Inbred.spec <- Inbred[,9:37604]
 Inbred.treatment<-cbind(Inbred.treatment,RangeRow=paste(Inbred.treatment$Range,Inbred.treatment$Row))
 Inbred.treatment<-as.data.frame(Inbred.treatment)
 
-#without controlling for the blocking effect we lose the genotype qution
 adonis(Inbred.spec ~ Genotype+Time+Rep, Inbred.treatment)
 ##This does not include the rhizosphere
 ##Rhizosphere increases the statsitcal signfi of a sample
@@ -1227,7 +1167,6 @@ adonis(T1.spec ~ Genotype+Range+Row, T1.treatment)
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-##The two below were not shown to be siginficant for genotype. Type was a signifcant factor in the second time point. 
 T2.treatment <- T2[,1:8]
 T2.spec <- T2[,9:37604]
 adonis(T2.spec ~ Genotype+Range+Row, T2.treatment)
@@ -1236,9 +1175,7 @@ adonis(T2.spec ~ Genotype+Range+Row, T2.treatment)
 T3.treatment <- T3[,1:8]
 T3.spec <- T3[,9:37604]
 adonis(T3.spec ~ Genotype+Range+Row, T3.treatment)
-##I may need to remove outlier data points: This could explain the wonky results to some degree. 
 
-##lets breifly look at how things are changing over the time points when using a normalized value
 All.e.std = decostand(T2.spec, method = "total")
 filter = function(x){
   temp = which(apply(x,2, function(x) sum(x>0) >= ceiling(0.95 * length(x))))
@@ -1257,44 +1194,6 @@ filter = function(x){
 All.T3.filtered = filter(All.e.std)
 adonis(All.T3.filtered ~ Genotype+Range+Row, T3.treatment)
 
-#High R squares but not signifcant 
-
-## Rhizosphere examples =====
-
-Rhizosphere= subset(OTU16SAll, Time == "R")
-Rhizosphere= subset(Rhizosphere, Type != "Teosinte")
-
-R.treatment <- Rhizosphere[,1:8]
-R.spec <- Rhizosphere[,9:37604]
-adonis(R.spec ~ Genotype, R.treatment)
-
-####GREAT! 
-#Genotypes show differences The rhizosphere samples show much stronger changes in the microbial community. 
-#This model has not teosinte
-# Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)
-# Genotype   5   0.43898 0.087796  1.0085 0.31433  0.439
-# Residuals 11   0.95758 0.087053         0.68567       
-# Total     16   1.39656                  1.00000   
-#This model includes the teoinste rhizosphere
-# Df SumsOfSqs  MeanSqs F.Model      R2 Pr(>F)    
-# Genotype   9    1.2244 0.136044  1.4897 0.38967  0.001 ***
-#   Residuals 21    1.9177 0.091321         0.61033           
-# Total     30    3.1421                  1.00000           
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-#Lets see if this is sometype of blocking issue| 
-#The model below was used to examine the effects of rhizosphere| Teosinte rhizosphere are very different,
-#inbred maize rhizosphere do not seem that different from each other.
-#The differences in the inbred maize may be overwhelmed by the more stocastic environmental varation.
-adonis(R.spec ~ Genotype+Row+Range, R.treatment, strata=R.treatment$Row)
-
-#Teosinte seems to drive most of the differences in the field
-#without teosinte the rhizosphere, do not have signifcant differences 
-#That is a little concerning. But we need to move forward in our understanding. 
-
-#####There is clear seperation in how the type of sample infleunce the results.
-#Lets look at some of the functional stuff- mayebe that will be more infromative. 
 
 ##Here I will look at the genotypic means
 Run1.results= aggregate(OTU16S[, 9:37604], list(OTU16S$Genotype), mean)
@@ -1489,7 +1388,6 @@ adonis(Maize.spec ~ Genotype*Time+Row+Range+RangeRow, MM.ITS.Inbred.Model, strat
 adonis(Maize.spec ~ Genotype*Time*RangeRow+Row+Range, MM.ITS.Inbred.Model, strata = MM.ITS.Inbred.Model$RangeRow)
 adonis(Maize.spec ~ Type*Time+Range+RangeRow, MM.ITS.Inbred.Model, strata = MM.ITS.Inbred.Model$RangeRow)
 
-#### Type has a VERY, VERY, VERY weak interaction with the micorbial communirt. 
 # Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
 # Type        1     0.346 0.34553 1.05595 0.00453  0.001 ***
 #   Time        2     1.494 0.74719 2.28341 0.01959  0.001 ***
@@ -1525,10 +1423,6 @@ adonis(Maize.spec ~ Type+Time+Rep, Maize.treatment)
 
 adonis(Maize.spec ~ Type*Time+Rep, Maize.treatment)
 
-##it seems like this story should mostly be about the differences in the microbail community between teosinte and maize. 
-#The first chapter seemed to show that the changes occured 
-
-
 Hybrid= subset(OTUITSAll, Type == "Hybrid")
 
 H.treatment <- Hybrid[,1:8]
@@ -1538,378 +1432,11 @@ adonis(H.spec ~ Genotype*Time+Rep, H.treatment)
 
 
 
-
-#### Looking at the population Structure data=====
-# 
-# library(ggplot2)
- library(vegan)
-# 
-PopulationStruc <- read.csv("Data/populationStructure.csv")
- Meta<-PopulationStruc[,1:2]
- Data<-log(PopulationStruc[,3:9])
-# 
- COL.treat<-rainbow(19)
-MDS <- metaMDS(Data, trymax=50, perm=1e3)
- ordiplot(MDS, type="n")
-points(MDS$points,  
-       col=COL.treat[Meta$Genotype],
-       pch=16)
-text(MDS$points, Meta$Genotype, col="blue", cex=0.9)
-
-# #here is some code to make ggplot2 ordinations
-# 
-# vare.mds <- metaMDS(Data) 
-# 
-# data.scores <- as.data.frame(scores(vare.mds))  #Using the scores function from vegan to extract the site scores and convert to a data.frame
-# data.scores$site <- rownames(data.scores)  # create a column of site names, from the rownames of data.scores
-# data.scores$Meta <- Meta  #  add the grp variable created earlier
-# head(data.scores)  #look at the data
-# 
-# ggplot() + 
-#   geom_point(data=data.scores,aes(x=NMDS1,y=NMDS2,shape=Meta.Type,colour=Meta.Type), alpha=0.5) + # add the point markers
-#   geom_text(data=data.scores,aes(x=NMDS1,y=NMDS2,label=Meta.Genotype),size=6,vjust=0) +  # add the site labels
-#   scale_colour_manual(values=c("A" = "red", "B" = "blue")) +
-#   coord_equal() +
-#   theme_bw()
-
-
-###This is all kinda trash all I need is just the major axis
-
-##Code to make dendogram with the population Structure ====
-#Data<-PopulationStruc[-c(7,8,9,16,17,18,19),]
-
-PopulationStruc <- PopulationStruc[order(PopulationStruc$Genotype),]
-
-# colnames(PopulationStruc)<-c(PopulationStruc[1,])
-rownames(PopulationStruc) <- as.character(unlist(PopulationStruc[,1]))
-PopulationStruc = PopulationStruc[,-1 ]
-
-
-Distance<-as.dist(PopulationStruc[,3:9])
-Data<-PopulationStruc[,3:8]
-
-names(Distance)[names(Distance)=="Time"] <- "Days"
-
-library(cluster)
-
-Distance<-daisy(Data, metric = c("gower"), stand = TRUE, type = list())
-
-
-
-library(ape)
-
-Bob<-nj(as.dist(Distance)) 
-plot(hclust(as.dist(Distance)))
-
-#Mantel test for distance matrix ======
-library(ade4)
-dist(Distance)
-Population<-as.matrix(dist(Distance))
-MicrobialCom<-as.matrix(dist(MCDistance))
-
-mantel.rtest(as.dist(Population), as.dist(MicrobialCom), nrepet = 15000)
-
-plot(r1 <-mantel.rtest( as.dist(MicrobialCom), as.dist(Population), nrepet = 999))
-
-
-plot(mantel.test(Population, MicrobialCom, plot = TRUE, method = c("spearman", "kendall", "pearson"), trials = 9999,))
-plot(mantel.test(dist(Distance), dist(MCDistance)))
-
-mantel.test(dist(1:7), dist(1:7))
-
-#No clear relationship between the genetic strucutre and the microbail community
-
-#This with all genotypes. 
-# Monte-Carlo test
-# Call: mantel.rtest(m1 = as.dist(Population), m2 = as.dist(MicrobialCom), 
-#                    nrepet = 9999)
-# 
-# Observation: 0.1722061 
-# 
-# Based on 9999 replicates
-# Simulated p-value: 0.1486 
-# Alternative hypothesis: greater 
-# 
-# Std.Obs  Expectation     Variance 
-# 1.066988976 -0.001884617  0.026621444 Monte-Carlo test
-# Call: mantel.rtest(m1 = as.dist(Population), m2 = as.dist(MicrobialCom), 
-#                    nrepet = 9999)
-# 
-# Observation: 0.1722061 
-# 
-# Based on 9999 replicates
-# Simulated p-value: 0.1486 
-# Alternative hypothesis: greater 
-# 
-# Std.Obs  Expectation     Variance 
-# 1.066988976 -0.001884617  0.026621444 
-
-#i think im going to try without hybrids
-
-#Now that I have a dendogram based on the population structure of the plants - I want to figure out the core data that are being recruited 
-# I thinkk this method could be cool: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5037057/
-
-
-
-#This looks like a cool method for finding core micorbial communties- I want recapitulate this genetics picture https://www.nature.com/articles/s41576-018-0085-z
-#In this figure they are showing that Sets of microbes can be lost and gained across the evolutionary histeot of an otganisms 
-#https://www.biorxiv.org/content/10.1101/491183v1.full  #file:///Users/alonsofavela/Downloads/media-1.html
-
-install.packages(c("Hmisc","vegan","RAM"))
-
-#Uploading Microbial Communtiy =====
-
-OTU16SAll <- read.csv("Data/16S-OTU-Meta.csv")
-Rhizosphere= subset(OTU16SAll, Type == "Teosinte")
-
-B73= subset(OTU16SAll, Genotype == "B73")
-
-# I think it would be best to work with a single genotype
-
-core.fit=function(otu_table) {
-  otu_table_no_tax=otu_table[-length(otu_table)]
-  otu_table_no_tax=t(otu_table_no_tax)}
-  ##Calculate the average of total individuals per community source
-
-N <- mean(apply(otu_table_no_tax, 1, sum))
-
-maize_cores=core.fit(B73)
-
-#I dont have the energy to do this now- prehaps later 
-
-#lets try this
-#https://microbiome.github.io/tutorials/Core.html
-
-# Load data
-library(BiocManager)
-#source("https://bioconductor.org/install")
-#useDevel()
-BiocManager::install(version='devel')
-BiocManager::install("microbiome")
-
-
-install.packages(c("microbiome"))
-#Microbiome seems to be a tool that works with the phyloseq r objects in a wat that alloes you to easly maniplate the data
-library(microbiome)
-data(peerj32)
-
-# Rename the data
-pseq <- peerj32$phyloseq
-
-# Calculate compositional version of the data
-# (relative abundances)
-pseq.rel <- microbiome::transform(pseq, "compositional")
-
-
-head(prevalence(pseq.rel, detection = 1/100, sort = TRUE))
-
-
-head(prevalence(pseq.rel, detection = 1/100, sort = TRUE, count = TRUE))
-
-core.taxa.standard <- core_members(pseq.rel, detection = 0, prevalence = 50/100)
-pseq.core <- core(pseq.rel, detection = 0, prevalence = .5)
-core.taxa <- taxa(pseq.core)
-
-core.abundance <- sample_sums(core(pseq.rel, detection = .01, prevalence = .95))
-
-
-
-# With compositional (relative) abundances
-det <- c(0, 0.1, 0.5, 2, 5, 20)/100
-prevalences <- seq(.05, 1, .05)
-#ggplot(d) + geom_point(aes(x, y)) + scale_x_continuous(trans="log10", limits=c(NA,1))
-
-
-plot_core(pseq.rel, prevalences = prevalences, detections = det, plot.type = "lineplot") + xlab("Relative Abundance (%)")
-
-
-# Core with compositionals:
-prevalences <- seq(.05, 1, .05)
-detections <- 10^seq(log10(1e-3), log10(.2), length = 10)
-
-# Also define gray color palette
-gray <- gray(seq(0,1,length=5))
-p <- plot_core(pseq.rel, plot.type = "heatmap", colours = gray,
-               prevalences = prevalences, detections = detections) +
-  xlab("Detection Threshold (Relative Abundance (%))")
-print(p)    
-
-
-# Core with absolute counts and horizontal view:
-# and minimum population prevalence (given as percentage)
-detections <- 10^seq(log10(1), log10(max(abundances(pseq))/10), length = 10)
-
-library(RColorBrewer)
-p <- plot_core(pseq, plot.type = "heatmap", 
-               prevalences = prevalences,
-               detections = detections,
-               colours = rev(brewer.pal(5, "Spectral")),
-               min.prevalence = .2, horizontal = TRUE)
-print(p)
-
-
-###Now I'm going to find the core micorbiome from my own data set
-
-biom_file = "Data/otu_table_rarefied_100000.biom"
-
-map_file = "Data/2017MappingFile.txt"
-biomOTU = import_biom(biom_file,treefilename = 'Data/rep_seq_aligned_pfiltered.tre', 
-                      parseFunction = parse_taxonomy_greengenes)
-
-Map = import_qiime_sample_data("Data/2017MappingFile-R.txt")
-#Here I'm going to reorder my mapping file
-Map2<-sample_data(Map)[order(sample_data(Map)$Rep), ]
-
-#This code didnt really workMap2<-sample_data(OTU16S)[order(sample_data(OTU16S)$Rep), ]
-
-#Im wondering if this altered their assignment in the Microbial community.
-OTU16S = merge_phyloseq(biomOTU, Map)
-OTU16SSorted = merge_phyloseq(biomOTU, Map2)
-#When it merges them it gets rid of the sorting. 
-B73 <- subset_samples(OTU16S, Genotype == "B73")
-B73Sort <- subset_samples(OTU16SSorted, Genotype == "B73")
-
-#This is how I find the core memebers. Prevalence sets the number of taxa
-core.B73.standard <- core_members(B73, detection = 0, prevalence = 99/100)
-core.B73.standard2 <- core_members(B73Sort, detection = 0, prevalence = 99/100)
-
-#This turns the core back into the data frame
-
-
-###Finding the core taxa=======
-#What I need to do is find all of the core OTUs for the genotypes and map that on to the Population genetic tree that I calcuated. 
-#This will let us know if lines were lost in their genetic evolution
-# B73.core <- core(B73, detection = 0, prevalence = .5)
-# core.taxa <- taxa(B73.core)
-# 
-# core.abundance <- sample_sums(core(B73, detection = .01, prevalence = .5))
-# 
-# 
-# # With compositional (relative) abundances
-# det <- c(0, 0.1, 0.5, 2, 5, 20)/100
-# prevalences <- seq(.05, 1, .05)
-# #ggplot(d) + geom_point(aes(x, y)) + scale_x_continuous(trans="log10", limits=c(NA,1))
-# 
-# 
-# plot_core(B73, prevalences = prevalences, detections = det, plot.type = "lineplot") + xlab("Relative Abundance (%)")
-# 
-# # Core with compositionals:
-# prevalences <- seq(.05, 1, .05)
-# detections <- 10^seq(log10(1e-3), log10(.2), length = 10)
-# #Plot heat maop
-# gray <- gray(seq(0,1,length=5))
-# p <- plot_core(B73, plot.type = "heatmap", colours = gray,
-#                prevalences = prevalences, detections = detections) +
-#   xlab("Detection Threshold (Relative Abundance (%))")
-# print(p)  
-
-#I need to find code to append all of the core to a single sheet. The I can start comparing across the dendogram
-
-result <- paste(core.taxa,core.B73.standard,sep="-")
-
-df1 <- paste("B73", core.taxa, sep="_")
-data.frame(core.taxa, stringsAsFactors = TRUE)
-
-df1<-data.frame(core.taxa,core.taxa.standard)
-
-
-##Subsetting code for all genotypes=====
-OTU16SAll <- read.csv("Data/16S-OTU-Meta.csv")
-
-OTU16SAll<-subset(OTU16SAll, Time != "R")
-
-OTU16S<-subset_samples(OTU16S, Time != "R")
-OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T2.041")
-OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T3.037")
-OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T2.027")
-OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T2.040")
-OTU16S <- subset_samples(OTU16S, X.SampleID != "MM17.T3.063")
-#Need to remove outliers from the data 
-
-Core16S2017<-core_members(OTU16S, detection = 0, prevalence = 99.999/100)
-#There is a core of 797 taxa that are present in all of the rhizosphere samples at 99 coverage- At 100 percent there are 520 OTUs
-
-# for (Genotype in colnames(OTU16SAll)) {
-#   print(OTU16SAll[[Genotype]])}
-#   #This is the a way of runing throug a list| If I make a list the size of all three reps then I should have a issue with missing samples
-#   OTU16SAll2<-OTU16SAll[1:108,1:10]
-
-  
-  
-#Here is the list that will allow us to add the 
-pruned_data <- list()
-
-
-  # for (x in 1:length(OTU16SAll2$Genotype)){
-  #   for(i in 1:length(OTU16SAll2$Genotype)){
-  #     pruned_data[OTU16SAll2$Genotype[x]] <-subset_samples(OTU16S, Genotype == OTU16SAll2$Genotype[i])
-  # }
-  # }
-#THis function loops and subsets====
-pruned_data <- list()
-
-for(i in 1:length(OTU16SAll2$Genotype)){
-  pruned_data[[i]] <-subset_samples(OTU16S, Genotype == OTU16SAll2$Genotype[i])
-}
-
-core_data <- list()
-for(i in 1:length(OTU16SAll2$Genotype)){
-core_data[[i]]<-core_members(pruned_data[[i]], detection = 0, prevalence = 99.999/100)}
-
-
-
-  
-  core_members(pruned_data, detection = 0, prevalence = 99.999/100)
-
-  core.B73.standard <- core_members(B73, detection = 0, prevalence = 99.999/100)
-
-  # TH<-subset(OTU16SAll2, Genotype == OTU16SAll2$Genotype[3])
-  
-  #Here I want to make the list of genotypes-I would like the file to loop everything the data/. 
-  Genotypes<-unique(OTU16SAll[1:294,8])
-  Genotypes<-df(Genotypes)
-
-  ####This is the final code!! to subset and get the core microbiome
-  #Seems like if I pull directly from the file it has issues when it's looping through the data
-  #Here I will move
-  pruned_data <- list()
-  
-  for(i in 1:27){
-    pruned_data[[i]] <-subset_samples(OTU16S, Genotype == Genotypes[i])
-  }
-  
-  #Lets check all of our genotypes are present: Here are the genotypes that have been selected out
-  Genotypelist <- list()
-  for(i in 1:length(Genotypes)){
-    Genotypelist[[i]]<- pruned_data[[i]]@sam_data[["Genotype"]]}
-  
-  #This loop geneates the lists of core microbiomes 
-  core_data <- list()
-  for(i in 1:length(Genotypes)){
-    core_data[[i]]<-core_members(pruned_data[[i]], detection = 0, prevalence = 99.999/100)}
-  #After altering the prevelance I'm cerain that there are outliers altering the data
-
- 
-  data.frame(core_data)
-  
-df<-data.frame(Reduce(rbind, core_data))
-# 
- write.csv(df,'Data/Core-OTUs.csv')
- 
- lapply(core_data, function(x) write.table( data.frame(x), 'test.csv'  , append= F, sep=',' ))
-
-  
-#Make a list- poop out list elements -- filter data 
- 
- 
  
  ####
 ##########Functional Genes=========
- #I should probably re-run this but remove any of the outlier taxa cuz they will liely be fucking everythign up
  #Here is where the analysis for functional genes begin, apprently I have processed out OTU tables
  library(vegan)
- #Inclusion of teosinte into the model always strengths the results at the genetic level
- #I.E. Teosinte is leasing to these genetic difference. 
  
 #nifH ======
  #I wonder if I can make all of this part of a function to automate this code. 
