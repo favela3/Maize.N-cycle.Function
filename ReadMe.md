@@ -1,10 +1,10 @@
 # About Project
-Supplemental seqeunce processing and R statistical analysis for publication which compares the microbiome of 27 Zea cultivars: 12 Inbred maize genotypes, 9 hybrids and and 6 wild teosinte. 
-Project contains amplicon data for various genes: 16S rRNA, ITS, bacterial amoA, Archeal amoA, nirS, nirK, nosZ. In addtion to functional potential assay data, and N2O flux. 
+Supplemental sequence processing and R statistical analysis for publication which compares the microbiome of 27 Zea cultivars: 12 Inbred maize genotypes, 9 hybrids, and 6 wild teosinte. 
+The project contains amplicon data for various genes: 16S rRNA, ITS, bacterial amoA, Archeal amoA, nirS, nirK, and nosZ. In addition to functional potential assay data, and N2O flux. 
 
 # Sample Data 
 Raw sample data is present at BioProject: [PRJNA789877](https://dataview.ncbi.nlm.nih.gov/object/PRJNA789877)<br/>
-Functional Data present here in csv files. 
+Functional Data is present here in CSV files. 
 
 # Collaborators 
 1. [Angela Kent](https://microbiome.nres.illinois.edu/)
